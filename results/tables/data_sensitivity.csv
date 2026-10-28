@@ -1,0 +1,5 @@
+variant,n_seasons,peak_slope_km2_per_year,n_overlap_with_gauge,r_levels,r_detrended,r_first_diff
+default,21,-313.924,17,0.865,0.669,0.681
+drop_imputed,21,-313.924,17,0.865,0.669,0.681
+drop_suspected_copies,21,-313.924,17,0.865,0.669,0.681
+only_232m_seasons,12,-305.802,12,0.877,0.674,0.842
