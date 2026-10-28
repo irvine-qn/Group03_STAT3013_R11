@@ -43,14 +43,16 @@ Mục đánh dấu ✅ đã có, 🔜 sẽ được thêm theo [lộ trình](#l�
 ├── README.md                     ✅
 ├── AGENTS.md                     ✅  hướng dẫn cho AI coding agent
 ├── requirements.txt              ✅
+├── pyproject.toml                ✅  để `pip install -e .`
 ├── data/
-│   ├── raw/<region>/             ✅  ảnh gốc theo vùng, không commit
-│   ├── interim/<region>/         🔜  chuỗi/bảng trung gian (CSV nhỏ)
-│   └── processed/<region>/       🔜  bảng Level 1 / 2 / 3 đã sẵn sàng mô hình hóa
+│   ├── raw/<dataset>/            ✅  dữ liệu gốc theo bộ (mekong, mekong_hydrology, haiphong_tide), không commit
+│   ├── interim/<region>/         ✅  chuỗi/bảng trung gian (CSV nhỏ)
+│   └── processed/<region>/       ✅  bảng Level 1 (🔜 Level 2 / 3)
 ├── configs/
-│   └── regions/<region>.yaml     🔜  mỗi vùng một file: mặt nạ, lưới, lịch ảnh, đường dẫn
+│   └── regions/<region>.yaml     ✅  mỗi vùng một file: lịch ảnh, cột mục tiêu, đường dẫn (mekong.yaml)
 ├── src/floodbench/               ✅  gói code tái sử dụng
-│   ├── data/                     🔜  build_series, build_zones, build_grid, schema, regions
+│   ├── data/                     ✅  build_series, level1, schema, regions (🔜 build_zones, build_grid)
+│   ├── validation/               ✅  waterlevel (đối chiếu mực nước), sensitivity (độ nhạy dữ liệu)
 │   ├── models/                   🔜  baselines, stat, ml, hybrid
 │   ├── cv.py                     🔜  rolling-origin theo năm
 │   ├── features.py               🔜  lag, anomaly, climatology (chỉ từ tập train)
@@ -78,7 +80,21 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Đã kiểm tra với Python 3.10.11. Sau khi có code, cài gói ở chế độ phát triển bằng `pip install -e .` và chạy kiểm thử bằng `pytest`.
+Đã kiểm tra với Python 3.10.11. Sau đó cài gói ở chế độ phát triển và chạy kiểm thử:
+
+```bash
+pip install -e .
+pytest
+```
+
+Dựng lại bảng dữ liệu (sau khi giải nén ảnh gốc theo [data/raw/README.md](data/raw/README.md)):
+
+```bash
+python -m floodbench.data.build_series data/raw/mekong/kpftzmsyyz-2 data/interim/mekong/series_mean.csv
+python -m floodbench.data.level1            # -> data/processed/mekong/level1_series.csv
+python -m floodbench.validation.waterlevel  # -> results/tables/waterlevel_validation.csv
+python -m floodbench.validation.sensitivity # -> results/tables/data_sensitivity.csv
+```
 
 ## Lộ trình
 
