@@ -2,6 +2,14 @@
 
 Ghi mỗi quyết định kỹ thuật ảnh hưởng đến kết quả: định nghĩa biến mục tiêu, cách gộp lưới, cách chia train/test, loại mô hình.
 
+Cột "Người quyết": **đề xuất** nghĩa là chưa được cả nhóm xác nhận.
+
 | Ngày | Quyết định | Lý do | Người quyết |
 |---|---|---|---|
-| | | | |
+| 2026-10-28 | Dùng bộ Vu et al. (2022) làm dữ liệu chính, tạm dừng tìm dataset khác | Chuỗi diện tích ngập khớp với mực nước Tân Châu 2000–2016: r = 0,87 (thô) và 0,67 (sau khi bỏ xu hướng, khoảng tin cậy 95% xấp xỉ 0,28–0,87, n = 17); chênh lệch giữa hai năm liên tiếp tương quan 0,68–0,86. Chỉ kiểm được ở cấp năm. Xem `results/tables/waterlevel_validation.csv` | Phu Hung (đề xuất) |
+| 2026-10-28 | Quy lưới 232 m → 500 m bằng **mean** (`floodbench.data.build_series`); bản nearest-neighbor chỉ giữ ở `data/interim/mekong/legacy/` để so sánh | Mean không bỏ sót pixel. Dựng lại từ 565 ảnh gốc cho đúng bảng `series_mean.csv` (sai khác tối đa 0,01 km² do làm tròn) | Phu Hung (đề xuất) |
+| 2026-10-28 | Giữ mọi ảnh trong bảng Level 1 nhưng gắn cờ: `imputed` (2 ảnh thiếu: 2013-233, 2019-257, nội suy tuyến tính trong mùa), `duplicate` (15 ảnh giống hệt từng byte một ảnh sớm hơn, giữ bản đầu, nghi bản sau là bản sao), `grid_500m` | Không tự ý xóa dữ liệu; để độ nhạy "bỏ các ảnh này, kết luận có đổi không" chạy được. Mùa 2016 có 5/27 ảnh nghi bản sao, trong đó 3 ảnh cuối (ngày 345, 353, 361) giống hệt cùng ngày của 2015. Mùa 2017 chỉ 5 ảnh cuối (ngày 329–361) ở lưới 500 m | Phu Hung (đề xuất) |
+| 2026-10-28 | Độ nhạy ở cấp dữ liệu: xu hướng đỉnh lũ −314 km²/năm (cả 21 mùa) và −306 (12 mùa chỉ lưới 232 m); tương quan với mực nước không đổi (0,67). Bỏ ảnh nội suy hoặc nghi bản sao không đổi các thống kê dựa trên đỉnh | Các thống kê này không dùng những hàng bị gắn cờ, nên **chưa** nói gì về sai số dự báo 8 ngày. Độ nhạy của mô hình phải chạy lại khi có khung đánh giá. Xem `results/tables/data_sensitivity.csv` | Phu Hung (đề xuất) |
+| 2026-10-28 | Mốc thống kê (AnomAR1), định nghĩa chung cho mọi mô hình: mức bình thường = trung bình 5 mùa liền trước tại cùng bước; dự báo = mức bình thường tại bước đích + φ^h × (lệch hôm nay so với mức bình thường), φ ước lượng chỉ từ các mùa huấn luyện | Các lần chạy thăm dò trước dùng định nghĩa khác nhau nên người dẫn đầu ở 32 ngày đổi. Cách xử lý các mùa đầu (chưa đủ 5 mùa trước) và biến thể φ riêng cho từng tầm sẽ chốt khi viết test ở khung đánh giá | Phu Hung (đề xuất) |
+| 2026-10-28 | Dùng Chronos-2 làm mô hình foundation chuỗi thời gian; **hoãn TabPFN** cho đến khi có API key Prior Labs và đã đọc giấy phép; không dùng Kronos | TabPFN yêu cầu đăng nhập và chấp nhận giấy phép nghiên cứu. Kronos được huấn luyện trên dữ liệu nến tài chính, khó biện minh cho chuỗi lũ | Phu Hung (chờ nhóm xác nhận) |
+| 2026-10-28 | Cấu trúc repo: mỗi bộ dữ liệu thô một thư mục trong `data/raw/`; logic trong `src/floodbench/` (`data/`, `validation/`); cấu hình vùng ở `configs/regions/`; kết quả do code sinh ở `results/tables/`; PDF bài báo ở `reports/references/papers/` và không commit | Khớp quy ước trong README và AGENTS.md; thêm vùng mới chỉ cần thêm YAML | Phu Hung (đề xuất) |
