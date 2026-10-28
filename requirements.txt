@@ -1,9 +1,27 @@
 # Phiên bản đã chạy thành công (Python 3.10.11, Windows). Cập nhật bằng `pip freeze` khi thêm thư viện.
+# Chỉ ghim thư viện dùng trực tiếp; thư viện phụ thuộc do pip tự kéo về.
+
+# Dữ liệu và thống kê
 numpy==2.2.6
 pandas==2.3.3
-tifffile==2025.5.10
-scikit-learn==1.7.2
+scipy==1.15.3
 statsmodels==0.15.0
-scipy
-matplotlib
-pytest
+scikit-learn==1.7.2
+matplotlib==3.10.9
+PyYAML==6.0.3
+openpyxl==3.1.5
+
+# Đọc ảnh vệ tinh
+rasterio==1.4.4
+tifffile==2025.5.10
+
+# Mô hình
+lightgbm==4.7.0
+pygam==0.12.0
+chronos-forecasting==2.3.2   # kéo theo torch (bản CPU) và transformers, khá nặng
+torch==2.14.1
+transformers==5.20.2
+# TabPFN: chưa cài, cần API key Prior Labs và chấp nhận giấy phép (xem docs/decisions.md)
+
+# Kiểm thử
+pytest==9.2.0
