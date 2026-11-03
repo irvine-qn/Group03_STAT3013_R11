@@ -65,7 +65,8 @@ with tab_sum:
     d.metric("Chronos-2 vs AnomAR1, 32 ngày", f"{c.rmse_ratio:.3f}", help=f"p sau Holm = {c.p_t_holm:.3f}.")
     st.markdown("""
 - **Chưa mô hình nào thắng AnomAR1 có ý nghĩa** sau hiệu chỉnh Holm.
-- **GAM tương đương AnomAR1 ở 8 ngày** trong biên ±5% RMSE.
+- **Nhóm thống kê (ARX, Ridge, GAM) tương đương AnomAR1 ở 8 ngày** trong biên ±5% RMSE (p TOST chưa hiệu chỉnh đa kiểm định).
+- **Random Forest thô kém LightGBM thô**; dự báo anomaly giúp RF bám sát AnomAR1.
 - **LightGBM** nhỉnh về số học ở 8–16 ngày nhưng khoảng tin cậy rộng.
 - **Điểm đáng bàn là kết quả theo điều kiện**: giai đoạn lũ, và việc cỡ lũ lẫn với lượng dữ liệu học.
 - Hướng nên theo: **so sánh theo điều kiện**, không phải chứng minh ML thắng.

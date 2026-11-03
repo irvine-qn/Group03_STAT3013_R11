@@ -17,5 +17,5 @@ def test_report_numbers_come_from_tables():
     t = load()
     md = build_markdown(t)
     gam = t["probe_vs_anom_ar1"].query("model == 'gam' and h == 1").iloc[0]
-    assert f"{gam.p_tost:.4f}" in md
+    assert f"{gam.p_tost:.4f}" in md  # trong dòng "tương đương"
     assert f"{t['probe_rmse'].set_index('model').loc['anom_ar1', '4']:,.0f}" in md

@@ -11,7 +11,9 @@ from floodbench.data.regions import repo_root
 BASE = "anom_ar1"
 HORIZON_DAYS = {1: 8, 2: 16, 4: 32}
 LABELS = {
-    "anom_ar1": "AnomAR1 (thống kê, mốc so sánh)", "gam": "GAM", "lgbm_raw": "LightGBM (thô)",
+    "anom_ar1": "AnomAR1 (thống kê, mốc so sánh)", "gam": "GAM", "arx": "ARX (OLS)", "ridge": "Ridge có trễ",
+    "rf_raw": "Random Forest (thô)", "rf_anomaly": "Random Forest (anomaly)",
+    "rf_noclim": "Random Forest (không climatology)", "lgbm_raw": "LightGBM (thô)",
     "lgbm_anomaly": "LightGBM (anomaly)", "lgbm_noclim": "LightGBM (không climatology)",
     "chronos2": "Chronos-2 (zero-shot)", "persistence": "Persistence", "clim5": "Climatology 5 mùa",
     "clim_all": "Climatology toàn bộ", "seasonal_naive": "Seasonal naive",
@@ -89,7 +91,11 @@ def build_markdown(t: dict[str, pd.DataFrame] | None = None) -> str:
     sens = t["data_sensitivity"].set_index("variant")
     tc = gauge[(gauge.station == "TanChau") & (gauge.area_metric == "peak_km2") & (gauge.gauge_metric == "Max. WL (m)")].iloc[0]
 
-    gam_h1 = tests[(tests.model == "gam") & (tests.h == 1)].iloc[0]
+    equiv = tests[(tests.p_tost < 0.05) & ~tests.model.isin(["clim5", "clim_all", "persistence", "seasonal_naive"])]
+    equiv_text = "; ".join(f"{label(r.model)} ở {HORIZON_DAYS[r.h]} ngày (p = {r.p_tost:.4f})"
+                           for r in equiv.sort_values(["h", "p_tost"]).itertuples()) or "chưa có"
+    rf1, rf4 = (tests[(tests.model == "rf_raw") & (tests.h == h)].iloc[0] for h in (1, 4))
+    lgb_vs_rf = rmse.loc["lgbm_raw", "2"] / rmse.loc["rf_raw", "2"]
     chr_h4 = tests[(tests.model == "chronos2") & (tests.h == 4)].iloc[0]
     lgb1 = tests[(tests.model == "lgbm_raw") & (tests.h == 1)].iloc[0]
     lgb2 = tests[(tests.model == "lgbm_raw") & (tests.h == 2)].iloc[0]
@@ -105,7 +111,8 @@ def build_markdown(t: dict[str, pd.DataFrame] | None = None) -> str:
 
 - **Dữ liệu dùng được, nhưng bằng chứng còn yếu hơn vẻ ngoài.** Đỉnh diện tích ngập khớp với mực nước đỉnh ở Tân Châu: r = {tc.r_levels:.3f} khi để nguyên, còn {tc.r_detrended:.2f} sau khi bỏ xu hướng (CI 95% {tc.r_detrended_ci_low:.2f}–{tc.r_detrended_ci_high:.2f}, n = {int(tc.n)}). Mới kiểm được ở cấp năm.
 - **Chưa mô hình nào thắng AnomAR1 một cách có ý nghĩa** sau hiệu chỉnh Holm ({"có " + str(len(best_sig)) + " trường hợp ngoại lệ" if len(best_sig) else "không có trường hợp ngoại lệ"}), với chỉ {int(tests.n_seasons.iloc[0])} mùa test.
-- **GAM tương đương AnomAR1 ở {HORIZON_DAYS[1]} ngày** trong biên ±5% RMSE (TOST p = {gam_h1.p_tost:.4f}). Đây là kết luận "tương đương" hợp lệ duy nhất hiện có.
+- **Tương đương AnomAR1 trong biên ±5% RMSE** (TOST, p chưa hiệu chỉnh đa kiểm định): {equiv_text}. Nhóm ARX/Ridge/GAM bám sát AnomAR1, đúng với việc chúng cùng dự báo anomaly từ vài trễ.
+- **Random Forest thô kém LightGBM thô** ở cùng đặc trưng và ngân sách (RMSE 16 ngày: {rmse.loc["rf_raw", "2"]:,.0f} so với {rmse.loc["lgbm_raw", "2"]:,.0f} km²); dự báo anomaly (biến thể `anomaly`) giúp RF bám sát AnomAR1. Ở 8 ngày tỉ lệ RF thô/AnomAR1 là {rf1.rmse_ratio:.3f}, ở 32 ngày là {rf4.rmse_ratio:.3f}.
 - **LightGBM (thô)** nhỉnh hơn về số học ở {HORIZON_DAYS[1]} và {HORIZON_DAYS[2]} ngày (tỉ lệ RMSE {lgb1.rmse_ratio:.3f} và {lgb2.rmse_ratio:.3f}) nhưng khoảng tin cậy chứa 0, nên **chưa kết luận được**.
 - **Chronos-2 zero-shot kém hơn** ở {HORIZON_DAYS[4]} ngày (tỉ lệ {chr_h4.rmse_ratio:.3f}, p thô {chr_h4.p_t:.3f}, sau Holm {chr_h4.p_t_holm:.3f}).
 - **Điều đáng bàn nhất là kết quả theo điều kiện**, không phải "ai thắng" (mục 4).
@@ -128,7 +135,7 @@ def build_markdown(t: dict[str, pd.DataFrame] | None = None) -> str:
 - Mọi thống kê tiền xử lý (climatology 5 mùa trước, hệ số φ) chỉ tính từ dữ liệu huấn luyện. Có test cố ý tạo rò rỉ để chắc bộ kiểm tra bắt được.
 - AnomAR1 = mức bình thường tại bước đích + φ^h × (lệch hôm nay so với mức bình thường). Đây là mốc thống kê để so sánh.
 - Ngân sách tinh chỉnh như nhau (6 cấu hình/mô hình), chọn trên 3 mùa cuối của tập huấn luyện, không đụng tập test. Chi tiết ở `docs/tuning_log.md`.
-- So sánh ở **cấp mùa** (n = 11), vì sai số các bước trong cùng mùa tự tương quan mạnh. Dùng t ghép cặp, Wilcoxon, CI của chênh MSE, TOST ±5% RMSE và Holm trên 30 phép so sánh.
+- So sánh ở **cấp mùa** (n = 11), vì sai số các bước trong cùng mùa tự tương quan mạnh. Dùng t ghép cặp, Wilcoxon, CI của chênh MSE, TOST ±5% RMSE và Holm trên {len(tests)} phép so sánh.
 
 ## 4. Kết quả
 
@@ -140,7 +147,7 @@ def build_markdown(t: dict[str, pd.DataFrame] | None = None) -> str:
 
 {md_table(tests_table(tests))}
 
-Đọc bảng: tỉ lệ < 1 nghĩa là tốt hơn AnomAR1. CI chứa 0 nghĩa là chưa phân biệt được. p TOST nhỏ nghĩa là có bằng chứng tương đương trong ±5%.
+Đọc bảng: tỉ lệ < 1 nghĩa là tốt hơn AnomAR1. CI chứa 0 nghĩa là chưa phân biệt được. p TOST nhỏ nghĩa là có bằng chứng tương đương trong ±5%. p TOST **chưa** hiệu chỉnh đa kiểm định (cột Holm chỉ áp dụng cho p của t ghép cặp).
 
 ### 4.3 Theo giai đoạn lũ (tầm 16 ngày, RMSE km²)
 
@@ -164,7 +171,7 @@ Với toàn bộ dữ liệu huấn luyện, LightGBM thô tốt hơn ở mùa l
 
 ## 5. Có đáng làm tiếp không?
 
-Theo tiêu chí tự đặt (đạt ít nhất 2 trong 3): (a) thứ hạng đổi theo điều kiện, (b) có kết luận tương đương hợp lệ, (c) có phát hiện về phương pháp hoặc dữ liệu. Hiện đạt cả ba: nước rút so với đỉnh lũ và lượng dữ liệu học; GAM tương đương AnomAR1 ở 8 ngày; cỡ lũ lẫn với lượng dữ liệu học. **Hướng nên theo là "so sánh theo điều kiện", không phải "chứng minh ML thắng".**
+Theo tiêu chí tự đặt (đạt ít nhất 2 trong 3): (a) thứ hạng đổi theo điều kiện, (b) có kết luận tương đương hợp lệ, (c) có phát hiện về phương pháp hoặc dữ liệu. Hiện đạt cả ba: nước rút so với đỉnh lũ và lượng dữ liệu học; các mô hình thống kê tuyến tính (ARX, Ridge, GAM) tương đương AnomAR1 ở 8 ngày; cỡ lũ lẫn với lượng dữ liệu học. **Hướng nên theo là "so sánh theo điều kiện", không phải "chứng minh ML thắng".**
 
 ## 6. Hạn chế (đọc kỹ trước khi trích số)
 
