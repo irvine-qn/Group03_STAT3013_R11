@@ -5,7 +5,8 @@ from floodbench.data.regions import load_region
 from floodbench.features import build_rows
 from floodbench.models.baselines import anom_ar1
 from floodbench.models.ml import lgbm_anomaly, lgbm_noclim, lgbm_raw
-from floodbench.models.stat import gam
+from floodbench.models.forest import rf_raw
+from floodbench.models.stat import arx, gam, ridge
 
 CFG = load_region("mekong")
 
@@ -30,7 +31,7 @@ def test_every_model_beats_climatology_on_learnable_data_and_returns_right_shape
     train = build_rows(Y, CFG, idx(fold.train_seasons), 2)
     test = build_rows(Y, CFG, idx([fold.test_season]), 2)
     clim_err = np.sqrt(np.mean((test["y_target"] - test["clim_all_target"]) ** 2))
-    for fn in (anom_ar1, gam, lgbm_raw, lgbm_anomaly, lgbm_noclim):
+    for fn in (anom_ar1, gam, arx, ridge, lgbm_raw, lgbm_anomaly, lgbm_noclim, rf_raw):
         pred = fn(train, test, 2)
         assert pred.shape == (len(test),) and np.isfinite(pred).all()
         assert np.sqrt(np.mean((test["y_target"] - pred) ** 2)) < clim_err
