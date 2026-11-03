@@ -23,5 +23,8 @@ torch==2.14.1
 transformers==5.20.2
 # TabPFN: chưa cài, cần API key Prior Labs và chấp nhận giấy phép (xem docs/decisions.md)
 
+# Báo cáo tương tác
+streamlit==1.46.1
+
 # Kiểm thử
 pytest==9.2.0

@@ -43,7 +43,15 @@ def main() -> None:
     both = pd.concat([w7, main_pred[main_pred["model"].isin(["gam", "lgbm_raw", "anom_ar1"])]])
     win = pooled_rmse(both).pivot(index="model", columns="h", values="rmse").round(0)
     win.to_csv(d / "probe_window7.csv")
-    print("Cửa sổ huấn luyện cố định 7 mùa (_w7) vs toàn bộ:\n", win.to_string())
+    print("Cửa sổ huấn luyện cố định 7 mùa (_w7) vs toàn bộ:\n", win.to_string(), "\n")
+
+    w7h2 = w7[w7["h"] == 2].copy()
+    w7h2["size"] = w7h2["season"].map(size)
+    anchor = h2[h2["model"] == BASE]
+    wmag = pooled_rmse(pd.concat([w7h2, anchor]), by=("model", "size")).pivot(
+        index="model", columns="size", values="rmse").round(0)
+    wmag.to_csv(d / "probe_window7_by_magnitude_h2.csv")
+    print("Cửa sổ 7 mùa theo cỡ lũ, h=2:\n", wmag.to_string())
 
 
 if __name__ == "__main__":

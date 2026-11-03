@@ -94,6 +94,10 @@ python -m floodbench.data.build_series data/raw/mekong/kpftzmsyyz-2 data/interim
 python -m floodbench.data.level1            # -> data/processed/mekong/level1_series.csv
 python -m floodbench.validation.waterlevel  # -> results/tables/waterlevel_validation.csv
 python -m floodbench.validation.sensitivity # -> results/tables/data_sensitivity.csv
+python -m floodbench.benchmark             # -> results/tables/probe_predictions.csv
+python -m floodbench.report_tables         # -> results/tables/probe_*.csv
+python -m floodbench.report_md             # -> results/probe_report.md
+streamlit run app/streamlit_app.py         # báo cáo tương tác
 ```
 
 ## Lộ trình
