@@ -27,10 +27,10 @@ Nhóm chốt so sánh **bộ mô hình đã chạy ở đợt thăm dò** (mục
 
 | Người | Mô hình | Việc riêng nên làm (ngoài khung chung ở 1.3) |
 |---|---|---|
-| **Quỳnh** | AnomAR1 (mốc thống kê chính) | Giải thích công thức và φ; in φ ước lượng ở từng fold; chẩn đoán phần dư (ACF, Ljung–Box); so sánh φ^h với φ ước lượng riêng từng tầm; truy nguyên chênh lệch 1.602 so với 1.687 km² ở 32 ngày (mục 12.1) |
-| **Bình** | GAM | Vẽ hàm trơn s(doy) và hệ số hai trễ; cấu hình (n_splines, lam) được chọn ở từng fold; chẩn đoán phần dư; giải thích vì sao GAM gần ranh giới thống kê/ML; diễn giải kết quả tương đương TOST ở 8 ngày |
-| **Thiện** | LightGBM (raw, anomaly, noclim) | Giải thích 3 biến thể và vì sao khai báo trước; cấu hình được chọn ở từng fold; độ quan trọng đặc trưng hoặc SHAP (đáp ứng mục Explainable AI của outline); kiểm tra lợi thế khi nước rút có ổn định theo từng mùa không; chạy vài seed để xem kết quả có phụ thuộc ngẫu nhiên không |
-| **Phu Hung** | Baseline, ARX, Ridge, Random Forest, Chronos-2; khung đánh giá | Giữ ổn định `features.py`, `cv.py`, `tuning.py`, `evaluation.py`, `inference.py`; gộp kết quả; lập bảng so sánh cuối và viết report cuối với insight |
+| **Quỳnh** | AnomAR1 (mốc thống kê chính); **việc chung:** bảng Level 3, EDA và thống kê suy diễn (chương 4) | Giải thích công thức và φ; in φ ước lượng ở từng fold; chẩn đoán phần dư (ACF, Ljung–Box); so sánh φ^h với φ ước lượng riêng từng tầm; truy nguyên chênh lệch 1.602 so với 1.687 km² ở 32 ngày (mục 12.1) |
+| **Bình** | GAM; **việc chung:** hồi quy Level 3, chương 3 Data & Methodology, gửi câu hỏi cho thầy | Vẽ hàm trơn s(doy) và hệ số hai trễ; cấu hình (n_splines, lam) được chọn ở từng fold; chẩn đoán phần dư; giải thích vì sao GAM gần ranh giới thống kê/ML; diễn giải kết quả tương đương TOST ở 8 ngày |
+| **Thiện** | LightGBM (raw, anomaly, noclim); **việc chung:** chương 1–2 Introduction và Literature Review, tra DOI tài liệu tham khảo | Giải thích 3 biến thể và vì sao khai báo trước; cấu hình được chọn ở từng fold; độ quan trọng đặc trưng hoặc SHAP (đáp ứng mục Explainable AI của outline); kiểm tra lợi thế khi nước rút có ổn định theo từng mùa không; chạy vài seed để xem kết quả có phụ thuộc ngẫu nhiên không |
+| **Phu Hung** | Baseline, ARX, Ridge, Random Forest, Chronos-2; khung đánh giá; **việc chung:** chương 5–7 và ghép báo cáo | Giữ ổn định `features.py`, `cv.py`, `tuning.py`, `evaluation.py`, `inference.py`; gộp kết quả; lập bảng so sánh cuối và viết report cuối với insight |
 
 ### 1.3 Khung chung cho mọi người (để so sánh còn công bằng)
 
@@ -40,11 +40,11 @@ Mô hình của mỗi người **đã có sẵn trong repo** và đã chạy tr�
 2. **Ngân sách tinh chỉnh bằng nhau:** 6 cấu hình mỗi mô hình (mỗi biến thể). Đổi lưới thì vẫn 6 cấu hình và ghi vào `docs/tuning_log.md`. Không bao giờ chọn tham số bằng điểm trên mùa test.
 3. **Kết quả sinh bằng code, không làm bảng tay:**
    `python -m floodbench.benchmark mekong <tên_mô_hình>` chỉ tính lại mô hình đó và ghi vào `results/tables/probe_predictions.csv`; sau đó `python -m floodbench.report_tables` sinh lại mọi bảng. Bảng output cuối của từng mô hình là các dòng của mô hình đó trong `results/tables/probe_*.csv`.
-4. **Report từng mô hình** đặt ở `reports/models/<mô_hình>.md`, theo khung chung ở 1.4. Mọi con số phải tra lại được trong `results/tables/` (ghi rõ tên file nguồn).
+4. **Mỗi người có một file riêng** ở `reports/members/` (`quynh_anomar1.md`, `binh_gam.md`, `thien_lightgbm.md`, `phuhung_others_and_final.md`): phần A là danh sách việc, các phần sau là nơi viết report, theo khung chung ở 1.4. Mọi con số phải tra lại được trong `results/tables/` (ghi rõ tên file nguồn).
 5. **Git:** tạo nhánh `feature/<mô_hình>-<tên>` từ `dev`, mở Pull Request vào `dev`, có ít nhất một người khác review. Không commit `data/raw/`. Cặp review chéo gợi ý: Quỳnh ↔ Thiện, Bình ↔ Phu Hung.
 6. **Vấn đáp:** thầy hay hỏi code từng dòng, nên ngoài mô hình của mình, mỗi người phải giải thích được toàn bộ pipeline (dữ liệu → đặc trưng → chia fold → tune → dự báo → kiểm định). Mã của đợt thăm dò được viết với sự hỗ trợ của AI agent, nên càng cần từng người đọc kỹ chứ không chỉ tin kết quả.
 
-### 1.4 Khung report cho từng mô hình (`reports/models/<mô_hình>.md`)
+### 1.4 Khung report cho từng mô hình (trong file của từng người ở `reports/members/`)
 1. **Mô hình là gì:** giải thích dễ hiểu, công thức, ví dụ bằng số.
 2. **Vì sao chọn, thuộc họ nào:** thống kê hay ML, giả định của mô hình, điểm mạnh/yếu về lý thuyết.
 3. **Cài đặt trong repo:** file và hàm, đầu vào (đặc trưng), mục tiêu (y hay anomaly), lưới 6 cấu hình, cấu hình được chọn ở mỗi fold.
@@ -64,12 +64,21 @@ Mô hình của mỗi người **đã có sẵn trong repo** và đã chạy tr�
 | 11-18 → 11-22 | Viết báo cáo đầy đủ, bài IEEE, slide, video; tập vấn đáp |
 | 11-23 | Báo cáo |
 
-### 1.6 Việc chưa có người nhận
-- **EDA, thống kê mô tả và suy diễn, hồi quy Level 3** (outline môn yêu cầu, xem mục 10).
-- Các chương chung của báo cáo: giới thiệu, tổng quan tài liệu và gap, dữ liệu và phương pháp.
-- Tra DOI tài liệu tham khảo (mục 12.5).
-- Gửi thầy các câu hỏi mở (mục 11).
-- Điền bảng thành viên (họ tên, MSSV) trong README.
+### 1.6 Việc chung đã chia
+
+| Việc | Người | Hạn gợi ý | Ghi chú |
+|---|---|---|---|
+| Gửi thầy các câu hỏi mở (mục 11) | Bình | 11-07 | Ghi câu trả lời vào `docs/decisions.md` |
+| Bảng Level 3 (theo năm, kèm cơ cấu đất) | Quỳnh | 11-10 | Cần ảnh sử dụng đất trong `data/raw/`; Bình dùng cho hồi quy |
+| EDA, thống kê mô tả và suy diễn (chương 4) | Quỳnh | 11-14 | Mann–Kendall, trước/sau 2010, Levene, Kruskal |
+| Hồi quy đỉnh lũ theo cơ cấu đất, 5 giả định | Bình | 11-14 | Phụ thuộc Level 3 |
+| Chương 3 Data & Methodology | Bình | 11-14 | Nguồn: mục 3–4 file này |
+| Chương 1 Introduction, chương 2 Literature Review | Thiện | 11-14 | Nguồn: mục 14–15 |
+| Tra DOI tài liệu tham khảo, danh mục IEEE | Thiện | 11-12 | `reports/references/` |
+| Chương 5–7, ghép báo cáo, bảng so sánh cuối | Phu Hung | 11-22 | |
+| Bảng thành viên (họ tên, MSSV) trong README | Mỗi người tự điền dòng của mình | 11-08 | |
+
+Nháp các chương viết trong file của từng người ở `reports/members/`, rồi Phu Hung ghép vào `reports/full_report/`.
 
 ---
 
