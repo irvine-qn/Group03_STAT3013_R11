@@ -63,7 +63,7 @@ Mục đánh dấu ✅ đã có, 🔜 sẽ được thêm theo [lộ trình](#l�
 │                                     → 06 đa vùng → 07 lưới (tùy chọn)
 ├── results/{tables,figures}/     ✅  đầu ra do code sinh ra
 ├── reports/                      ✅  full_report, ieee_paper, slides, references
-└── docs/                         ✅  decisions.md, tuning_log.md
+└── docs/                         ✅  decisions.md, tuning_log.md, tong_hop_du_an.md (tổng hợp và phân công)
 ```
 
 Quy ước chung: logic nằm trong `src/`, notebook chỉ gọi hàm và vẽ hình. Báo cáo chỉ trích số từ `results/`.
