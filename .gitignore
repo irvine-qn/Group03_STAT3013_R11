@@ -12,6 +12,9 @@ data/raw/*
 !data/raw/.gitkeep
 !data/raw/README.md
 
+# PDF bài báo (bản quyền nhà xuất bản): giữ cục bộ, chỉ commit danh mục trích dẫn
+reports/references/papers/*.pdf
+
 # Ghi chú nội bộ của nhóm, KHÔNG đưa lên repo chung
 docs_personal/
 
@@ -20,3 +23,4 @@ docs_personal/
 Thumbs.db
 .vscode/
 .idea/
+Group03_STAT3013_R11.rar

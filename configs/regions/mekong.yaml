@@ -1,0 +1,26 @@
+# Vùng chính: Đồng bằng sông Cửu Long (Vu et al. 2022, Mendeley DOI 10.17632/kpftzmsyyz.2)
+region: mekong
+display_name: Vietnamese Mekong Delta
+
+# Đường dẫn tương đối so với thư mục gốc repo
+raw_dir: data/raw/mekong/kpftzmsyyz-2
+interim_series: data/interim/mekong/series_mean.csv
+processed_level1: data/processed/mekong/level1_series.csv
+
+# Mỗi mùa lũ là một đoạn riêng: ngày 153 -> 361, cách nhau 8 ngày (27 bước)
+first_year: 2000
+last_year: 2020
+first_doy: 153
+step_days: 8
+n_steps: 27
+
+# Cột mục tiêu và cột độ phân giải (mét) trong bảng trung gian
+target_column: water_km2
+resolution_column: res
+# Ảnh có độ phân giải thô hơn ngưỡng này được coi là lưới 500 m (ảnh còn lại là 232 m)
+coarse_grid_threshold_m: 400
+
+# Hai ảnh không có trong bộ dữ liệu, nội suy tuyến tính và gắn cờ `imputed`
+known_missing:
+  - [2013, 233]
+  - [2019, 257]
