@@ -113,9 +113,9 @@ def plot_all(level1: pd.DataFrame, level3: pd.DataFrame) -> None:
     ax.figure.colorbar(
         plt.cm.ScalarMappable(cmap="viridis", norm=plt.Normalize(2000, 2020)),
         ax=ax,
-        label="Mùa",
+        label="Season",
     )
-    ax.set(xlabel="Ngày trong năm", ylabel="Diện tích ngập (km²)", title="21 mùa lũ")
+    ax.set(xlabel="Day of year", ylabel="Flooded area (km²)", title="21 flood seasons")
     fig.tight_layout()
     fig.savefig(FIGURES / "seasons_overlay.png", dpi=150)
     plt.close(fig)
@@ -125,7 +125,7 @@ def plot_all(level1: pd.DataFrame, level3: pd.DataFrame) -> None:
     ax.set_xticks(range(0, 27, 4), wide.columns[::4])
     ax.set_yticks(range(21), wide.index)
     ax.set(
-        xlabel="Ngày trong năm", ylabel="Mùa", title="Diện tích ngập theo mùa và bước"
+        xlabel="Day of year", ylabel="Season", title="Flooded area by season and step"
     )
     fig.colorbar(image, ax=ax, label="km²")
     fig.tight_layout()
@@ -136,32 +136,32 @@ def plot_all(level1: pd.DataFrame, level3: pd.DataFrame) -> None:
         1, 3, figsize=(15, 4.2), gridspec_kw={"width_ratios": [1, 2.4, 1]}
     )
     axes[0].hist(level1["target_km2"], bins=30, color="tab:blue")
-    axes[0].set(xlabel="km²", ylabel="Số ảnh", title="Phân phối diện tích ngập")
+    axes[0].set(xlabel="km²", ylabel="Number of images", title="Distribution of flooded area")
     axes[1].boxplot(
         [g["target_km2"] for _, g in level1.groupby("season")], tick_labels=wide.index
     )
     axes[1].tick_params(axis="x", rotation=90)
-    axes[1].set(ylabel="km²", title="Theo mùa")
+    axes[1].set(ylabel="km²", title="By season")
     phase = pd.cut(level1["doy"], PHASE_EDGES, right=False, labels=PHASES)
     axes[2].boxplot(
         [level1.loc[phase == p, "target_km2"] for p in PHASES], tick_labels=PHASES
     )
-    axes[2].set(ylabel="km²", title="Theo giai đoạn lũ")
+    axes[2].set(ylabel="km²", title="By flood phase")
     fig.tight_layout()
     fig.savefig(FIGURES / "distribution_boxplots.png", dpi=150)
     plt.close(fig)
 
     slope, intercept = np.polyfit(level3["season"], level3["peak_km2"], 1)
     fig, ax = plt.subplots(figsize=(7, 4))
-    ax.plot(level3["season"], level3["peak_km2"], marker="o", label="Đỉnh mùa")
+    ax.plot(level3["season"], level3["peak_km2"], marker="o", label="Season peak")
     ax.plot(
         level3["season"],
         slope * level3["season"] + intercept,
         linestyle="--",
         color="black",
-        label=f"OLS: {slope:.0f} km²/năm",
+        label=f"OLS: {slope:.0f} km²/year",
     )
-    ax.set(xlabel="Mùa", ylabel="km²", title="Đỉnh diện tích ngập theo năm")
+    ax.set(xlabel="Season", ylabel="km²", title="Peak flooded area by year")
     ax.legend()
     fig.tight_layout()
     fig.savefig(FIGURES / "peak_trend.png", dpi=150)

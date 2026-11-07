@@ -114,13 +114,13 @@ def plot_diagnostics(pred, tests, phi) -> None:
     for col, h in enumerate(horizons):
         p = pred[pred.h == h]
         sm.qqplot(p["y_target"] - p["pred"], line="s", ax=axes[0, col], markersize=3)
-        axes[0, col].set_title(f"Q-Q sai số, {days[h]} ngày")
+        axes[0, col].set_title(f"Q-Q plot of errors, {days[h]} days")
         mean_acf = tests[tests.h == h][[f"acf_{k}" for k in range(1, 6)]].mean()
         axes[1, col].bar(range(1, 6), mean_acf)
         axes[1, col].axhline(0, color="black", linewidth=0.8)
         axes[1, col].set(
-            title=f"ACF trung bình trong mùa, {days[h]} ngày",
-            xlabel="Độ trễ (bước)",
+            title=f"Mean within-season ACF, {days[h]} days",
+            xlabel="Lag (steps)",
             ylim=(-0.5, 1),
         )
     fig.tight_layout()
@@ -131,9 +131,9 @@ def plot_diagnostics(pred, tests, phi) -> None:
     for h in horizons:
         p = phi[(phi.model == "anom_ar1") & (phi.h == h)]
         ax.plot(
-            p["test_season"], p["phi"], marker="o", label=f"Dòng của tầm {days[h]} ngày"
+            p["test_season"], p["phi"], marker="o", label=f"Rows of {days[h]}-day horizon"
         )
-    ax.set(xlabel="Năm test", ylabel="phi", title="phi ước lượng theo fold")
+    ax.set(xlabel="Test season", ylabel="phi", title="Estimated phi by fold")
     ax.legend()
     fig.tight_layout()
     fig.savefig(FIGURES / "phi_by_fold.png", dpi=150)
@@ -146,13 +146,13 @@ def plot_seasons(pred, seasons) -> None:
         for col, h in enumerate(horizons):
             p = pred[(pred.season == season) & (pred.h == h)].sort_values("doy_target")
             axes[row, col].plot(
-                p["doy_target"], p["y_target"], color="black", label="Quan sát"
+                p["doy_target"], p["y_target"], color="black", label="Observed"
             )
             axes[row, col].plot(
-                p["doy_target"], p["pred"], color="tab:blue", label="Dự báo"
+                p["doy_target"], p["pred"], color="tab:blue", label="Forecast"
             )
             axes[row, col].set(
-                title=f"{season}, {days[h]} ngày", xlabel="Ngày trong năm", ylabel="km²"
+                title=f"{season}, {days[h]} days", xlabel="Day of year", ylabel="km²"
             )
     axes[0, 0].legend()
     fig.tight_layout()
