@@ -1,4 +1,5 @@
 """
+Bước thực hiện: 2
 - tạo bảng hồi quy, huấn luyện, có sử dụng file dataset level1_series.csv
 - Lệnh chạy: python src/anomAR1/process/run_model.py
 - hàm floodbench.models.baselines.anom_ar1 sinh ra dự báo
