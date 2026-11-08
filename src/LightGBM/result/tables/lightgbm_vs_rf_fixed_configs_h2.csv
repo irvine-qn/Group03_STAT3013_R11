@@ -1,0 +1,17 @@
+model,family,h,rmse_all,rmse_rising,bias_rising,rmse_peak,bias_peak,rmse_falling,bias_falling
+"RF lưới 0: depth=4, leaf=5, max_features=1.0",RF (lưới nhóm),2,1461.9,996.5,268.6,1569.1,-425.0,1783.5,663.0
+"RF lưới 1: depth=8, leaf=5, max_features=1.0",RF (lưới nhóm),2,1433.3,963.4,225.5,1573.5,-352.3,1733.5,599.3
+"RF lưới 2: depth=None, leaf=5, max_features=1.0",RF (lưới nhóm),2,1433.4,964.4,224.6,1574.7,-353.0,1732.4,597.2
+"RF lưới 3: depth=None, leaf=10, max_features=1.0",RF (lưới nhóm),2,1511.5,947.9,211.3,1606.3,-516.7,1903.2,738.6
+"RF lưới 4: depth=8, leaf=5, max_features=0.5",RF (lưới nhóm),2,1389.2,988.4,298.7,1516.1,-438.4,1650.9,567.4
+"RF lưới 5: depth=None, leaf=5, max_features=0.5",RF (lưới nhóm),2,1387.9,985.8,299.4,1517.4,-436.1,1648.7,568.7
+"RF depth=2, leaf=5","RF (thêm, nông)",2,1694.5,1044.7,225.0,1649.8,-436.1,2232.9,1034.5
+"RF depth=3, leaf=5","RF (thêm, nông)",2,1558.1,979.5,227.0,1625.2,-522.0,1979.8,880.4
+"LightGBM lưới 0: leaves=4, n=200, lr=0.05",LightGBM (lưới nhóm),2,1260.4,1043.5,322.5,1521.4,-268.9,1267.3,166.8
+"LightGBM lưới 1: leaves=4, n=100, lr=0.05",LightGBM (lưới nhóm),2,1274.4,1007.4,370.9,1490.3,-326.3,1364.5,172.3
+"LightGBM lưới 2: leaves=8, n=200, lr=0.05",LightGBM (lưới nhóm),2,1293.2,1062.4,307.2,1562.9,-175.3,1306.4,385.4
+"LightGBM lưới 3: leaves=4, n=400, lr=0.03",LightGBM (lưới nhóm),2,1255.9,1046.1,343.5,1525.4,-263.7,1248.4,171.6
+"LightGBM lưới 4: leaves=2, n=300, lr=0.05",LightGBM (lưới nhóm),2,1314.8,1025.7,371.5,1509.2,-331.5,1441.7,206.2
+"LightGBM lưới 5: leaves=8, n=100, lr=0.1",LightGBM (lưới nhóm),2,1293.4,1065.6,312.9,1533.6,-171.5,1329.7,354.0
+"LightGBM sâu: leaves=31, n=300, lr=0.05, mcs=5","LightGBM (thêm, sâu)",2,1425.7,1128.7,291.3,1669.3,-125.0,1523.4,520.5
+"LightGBM sâu: leaves=31, n=100, lr=0.3, mcs=5","LightGBM (thêm, sâu)",2,1437.8,1131.6,246.4,1600.8,-107.4,1606.6,579.3
