@@ -30,7 +30,7 @@
 - [ ] Giải thích vì sao lợi thế ở mùa lũ nhỏ biến mất khi chỉ học 7 mùa (cỡ lũ lẫn với lượng dữ liệu học).
 - [ ] Giải thích vì sao cây không ngoại suy được và hệ quả với năm lũ cực trị.
 
-Code phân tích để ở `notebooks/thien_lightgbm.ipynb`, hình lưu `results/figures/lightgbm/`. Hàm dùng lại được thì đưa vào `src/floodbench/`, kèm test.
+Code phân tích để ở `src/LightGBM/process/` (`lightgbm_diag.py`, `thien_lightgbm.ipynb`), kết quả lưu `src/LightGBM/result/{tables,figures}/`, test ở `src/LightGBM/test/`. Hàm dùng chung cho cả nhóm thì đưa vào `src/floodbench/`, kèm test.
 
 ### A3. Lấy số cho report (dán vào notebook)
 ```python
