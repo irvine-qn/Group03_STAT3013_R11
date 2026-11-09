@@ -7,6 +7,7 @@
 |---|---|
 | Mô hình | GAM dự báo anomaly: s(ngày đích) + l(a_t) + l(a_t−1), cộng lại climatology |
 | Code | `src/floodbench/models/stat.py`, hàm `gam`, lưới `GAM_GRID`; chọn cấu hình ở `src/floodbench/models/tuning.py` |
+| Phân tích riêng | `src/GAM/` (code dễ đọc, bảng, hình, test); hướng dẫn: [src/GAM/docs/README.md](../../src/GAM/docs/README.md) |
 | Tên trong kết quả | `gam`, `gam_w7` |
 | Nhánh git | `feature/gam-binh` (tách từ `dev`, PR vào `dev`) |
 | Review chéo | Phu Hung |
@@ -57,6 +58,8 @@ print(t[t.model.isin(M)].to_string(index=False))   # tỉ lệ RMSE, CI, p Holm,
 ---
 
 ## Phần B. Report: GAM
+
+> Bản đầy đủ có hình: [src/GAM/docs/bao_cao_gam.md](../../src/GAM/docs/bao_cao_gam.md) (mục B1–B7 bên dưới tương ứng với các mục cùng tên ở đó).
 
 ### B1. Mô hình là gì
 *Giải thích dễ hiểu (hồi quy cộng tính, mỗi biến một hàm trơn), công thức, ví dụ.*
