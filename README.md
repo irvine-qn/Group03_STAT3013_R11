@@ -34,14 +34,33 @@ python -m pytest
 
 ## Project layout
 
-- `src/floodbench/`: reusable data-processing, modeling, and reporting code.
-- `configs/regions/`: per-region YAML settings; paths in these files are
-  relative to the project root.
-- `data/raw/`: locally stored source datasets; raw files are not committed.
-- `data/interim/` and `data/processed/`: derived datasets.
-- `results/tables/`: generated CSV tables read by the report app.
-- `app/`: local Streamlit report UI.
-- `tests/`: automated tests.
+```text
+Group03_STAT3013_R11/
+├── app/
+│   └── streamlit_app.py      # Local Streamlit report UI
+├── configs/
+│   └── regions/
+│       └── mekong.yaml       # Per-region settings (paths relative to project root)
+├── data/
+│   ├── raw/                  # Source datasets (not committed)
+│   └── processed/            # Derived datasets
+├── docs/                     # Project documentation
+├── notebooks/                # Exploratory notebooks (nếu chốt chạy streamlit thì sẽ không cần notebook)
+├── results/                  # Model outputs, one folder per model
+│   ├── anomAR1/
+│   ├── Chronus-2/
+│   ├── GAM/
+│   └── LightGBM/
+├── src/                      # Model source code, one folder per model
+│   ├── anomAR1/
+│   ├── Chronus-2/
+│   ├── GAM/
+│   └── LightGBM/
+├── tests/                    # Bộ test chung, đối với test riêng thì cập nhật vào thư mục test lớn, test riêng của model thì ở thư mục con của nó
+├── pyproject.toml            # Project metadata
+├── requirements.txt          # Pinned runtime dependencies
+└── README.md
+```
 
-The scaffold is not runnable until the source package, input data, and required
-result tables have been added.
+Note: Git does not track empty folders. Add a `.gitkeep` file to any empty
+folder above that should exist in the repository.
