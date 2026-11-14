@@ -18,12 +18,12 @@ tifffile==2025.5.10
 # Mô hình
 lightgbm==4.7.0
 pygam==0.12.0
-chronos-forecasting==2.3.2   # kéo theo torch (bản CPU) và transformers, khá nặng
+chronos-forecasting==2.3.2
 torch==2.14.1
 transformers==5.20.2
-# TabPFN: chưa cài, cần API key Prior Labs và chấp nhận giấy phép (xem docs/decisions.md)
 
 # Báo cáo tương tác
+altair==5.5.0
 streamlit==1.46.1
 
 # Kiểm thử
