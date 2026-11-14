@@ -7,16 +7,8 @@ venv/
 .pytest_cache/
 *.egg-info/
 
-# Dữ liệu ảnh gốc (~2,6 GB mỗi vùng): chỉ commit CSV trung gian nhỏ
 data/raw/*
-!data/raw/.gitkeep
 !data/raw/README.md
-
-# PDF bài báo (bản quyền nhà xuất bản): giữ cục bộ, chỉ commit danh mục trích dẫn
-reports/references/papers/*.pdf
-
-# Ghi chú nội bộ của nhóm, KHÔNG đưa lên repo chung
-docs_personal/
 
 # OS / editor
 .DS_Store
