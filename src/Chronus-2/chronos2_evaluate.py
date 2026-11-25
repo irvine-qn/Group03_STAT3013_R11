@@ -166,7 +166,8 @@ def add_flood_size(pred: pd.DataFrame) -> pd.DataFrame:
 def add_season_part(pred: pd.DataFrame) -> pd.DataFrame:
     """Tách gốc dự báo thành phần đầu–giữa mùa (t ≤ 20) và cuối mùa (t ≥ 21).
 
-    Mục đích: kiểm tra phần thua của Chronos-2 ở 32 ngày tập trung ở đâu trong mùa.
+    Mục đích: mô tả phần thua của Chronos-2 ở 32 ngày nằm ở đâu trong mùa.
+    Mốc t = 21 chọn SAU khi xem hình rmse_by_origin.png, nên bảng này chỉ để mô tả, không kiểm định.
     """
     late = pred["t"] >= LATE_ORIGIN
     part = np.where(late, f"t>={LATE_ORIGIN}", f"t<={LATE_ORIGIN - 1}")

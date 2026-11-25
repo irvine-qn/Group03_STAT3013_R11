@@ -77,7 +77,8 @@ Theo điều kiện, tầm 16 ngày (`rmse_by_phase_h2.csv`, `rmse_by_size_h2.cs
 | AnomAR1 | 1154 | 1391 | 1578 | 1488 | 1367 | 1260 |
 | Chronos-2 | 1134 | 1468 | 1633 | 1579 | 1323 | 1295 |
 
-Theo vị trí gốc dự báo trong mùa (`rmse_by_season_part.csv`):
+Theo vị trí gốc dự báo trong mùa (`rmse_by_season_part.csv`). **Bảng mô tả, lập sau khi xem hình
+`rmse_by_origin.png`**: mốc chia t = 21 chọn sau khi đã thấy dữ liệu, không khai báo trước, không kiểm định.
 
 | Tầm | Gốc t ≤ 20: AnomAR1 / Chronos-2 | Gốc t ≥ 21: AnomAR1 / Chronos-2 |
 |---|--:|--:|
@@ -91,9 +92,12 @@ Hình: `results/Chronus-2/figures/rmse_by_horizon.png`, `rmse_by_origin.png`, `e
 
 - Chronos-2 **không tốt hơn** AnomAR1 ở tầm nào. Ở 8 và 16 ngày khác biệt không có ý nghĩa;
   ở 32 ngày **kém hơn có ý nghĩa** (RMSE cao hơn 6%, CI của chênh MSE nằm hẳn trên 0).
-- Phần thua ở 32 ngày tập trung ở **cuối mùa**: với gốc t ≤ 20 hai mô hình gần như ngang nhau
-  (1687 so với 1703), với gốc t ≥ 21 (đích rơi vào cuối giai đoạn nước rút) Chronos-2 sai nhiều hơn
-  hẳn (2236 so với 1689). Vậy điểm yếu **không** đến từ ngữ cảnh ngắn đầu mùa.
+- Ở 32 ngày, **phần chênh lớn nhất tính theo km²** nằm ở cuối mùa: gốc t ≥ 21 (đích rơi vào cuối
+  giai đoạn nước rút) cho 2236 so với 1689; gộp các gốc t ≤ 20 thì gần ngang nhau (1703 so với 1687).
+  Nhưng ở vài gốc đầu tiên Chronos-2 **cũng kém hơn** khoảng 10–18% (t = 3: 705 so với 597;
+  t = 5: 1247 so với 1124, `rmse_by_origin.csv`), chỉ là sai số đầu mùa nhỏ về km² nên bị che khi
+  gộp. Phần chênh cuối mùa do một vài mùa chi phối (2012, 2014, 2015, 2019, cũng là các mùa có dự
+  báo âm), chỉ có 3 gốc × 11 mùa. Đây là mô tả, chưa đủ để khẳng định nguyên nhân.
 - Chronos-2 nhỉnh hơn một chút khi nước lên (1134 so với 1154 ở 16 ngày) nhưng kém ở đỉnh và khi
   nước rút. Các lát cắt này chỉ để mô tả, chưa kiểm định riêng.
 
