@@ -57,3 +57,14 @@ def test_chronos_called_once_per_origin(setup):
     assert {call["prediction_length"] for call in pipeline.calls} == {4}
     context_lengths = [len(call["inputs"][0]) for call in pipeline.calls]
     assert context_lengths[:24] == list(range(3, 27))  # gốc t có ngữ cảnh đúng t bước
+
+
+def test_chronos_uses_forecast_step_h_for_horizon_h(setup):
+    """Pipeline giả trả anomaly 10, 20, 30, 40: tầm h phải lấy đúng 10·h."""
+    config, Y, _ = setup
+    predictions = make_predictions(Y, config, Chronos2ZeroShot(FakePipeline(step_value=10.0)))
+    chronos = predictions[predictions["model"] == "chronos2"]
+    for row in chronos.itertuples():
+        season_idx = row.season - config["first_year"]
+        added_anomaly = row.pred - climatology(Y, season_idx)[row.t + row.h - 1]
+        assert added_anomaly == pytest.approx(10.0 * row.h)
