@@ -8,6 +8,7 @@ Ghi:  results/Chronus-2/tables/
         rmse_by_phase_h2.csv   RMSE theo giai đoạn lũ (tầm 16 ngày)
         rmse_by_size_h2.csv    RMSE theo cỡ lũ của mùa test (tầm 16 ngày)
         rmse_by_origin.csv     RMSE theo gốc t, tức theo độ dài ngữ cảnh
+        rmse_by_season_part.csv  RMSE khi gốc ở phần đầu–giữa mùa (t ≤ 20) và cuối mùa (t ≥ 21)
       results/Chronus-2/figures/
         rmse_by_horizon.png, rmse_by_origin.png, example_seasons.png
 
@@ -38,6 +39,7 @@ BASELINE = "anom_ar1"
 TOST_MARGIN = 0.05  # "tương đương" nghĩa là RMSE chênh không quá ±5%
 # Giai đoạn lũ theo ngày đích: [từ ngày, đến trước ngày, tên]
 PHASES = [(0, 257, "rising"), (257, 298, "peak"), (298, 999, "falling")]
+LATE_ORIGIN = 21  # từ gốc này trở đi, đích 32 ngày rơi vào cuối mùa nước rút (ngày ≥ 345)
 LABELS = {"chronos2": "Chronos-2", "anom_ar1": "AnomAR1"}
 
 
@@ -161,6 +163,16 @@ def add_flood_size(pred: pd.DataFrame) -> pd.DataFrame:
     return pred.assign(size=pred["season"].map(size).astype(str))
 
 
+def add_season_part(pred: pd.DataFrame) -> pd.DataFrame:
+    """Tách gốc dự báo thành phần đầu–giữa mùa (t ≤ 20) và cuối mùa (t ≥ 21).
+
+    Mục đích: kiểm tra phần thua của Chronos-2 ở 32 ngày tập trung ở đâu trong mùa.
+    """
+    late = pred["t"] >= LATE_ORIGIN
+    part = np.where(late, f"t>={LATE_ORIGIN}", f"t<={LATE_ORIGIN - 1}")
+    return pred.assign(season_part=part)
+
+
 # ---------- Hình ----------
 
 def plot_rmse_by_horizon(rmse: pd.DataFrame, path: Path) -> None:
@@ -231,12 +243,15 @@ def main() -> None:
     by_size = pooled_rmse(add_flood_size(h2), ["model", "size"]).pivot(
         index="model", columns="size", values="rmse")[["small", "medium", "large"]]
     by_origin = pooled_rmse(pred, ["model", "h", "t"])
+    by_part = pooled_rmse(add_season_part(pred), ["h", "season_part", "model"]).pivot(
+        index=["h", "season_part"], columns="model", values="rmse")
 
     rmse.round(0).to_csv(TABLES / "rmse.csv")
     tests.round(4).to_csv(TABLES / "vs_anom_ar1.csv", index=False)
     by_phase.round(0).to_csv(TABLES / "rmse_by_phase_h2.csv")
     by_size.round(0).to_csv(TABLES / "rmse_by_size_h2.csv")
     by_origin.round(1).to_csv(TABLES / "rmse_by_origin.csv", index=False)
+    by_part.round(0).to_csv(TABLES / "rmse_by_season_part.csv")
 
     plot_rmse_by_horizon(rmse, FIGURES / "rmse_by_horizon.png")
     plot_rmse_by_origin(by_origin, FIGURES / "rmse_by_origin.png")
@@ -245,7 +260,8 @@ def main() -> None:
     print("RMSE (km², cột = tầm h):\n", rmse.round(0).to_string(), "\n")
     print("So với AnomAR1 (cấp mùa):\n", tests.round(4).to_string(index=False), "\n")
     print("Theo giai đoạn lũ, h = 2:\n", by_phase.round(0).to_string(), "\n")
-    print("Theo cỡ lũ, h = 2:\n", by_size.round(0).to_string())
+    print("Theo cỡ lũ, h = 2:\n", by_size.round(0).to_string(), "\n")
+    print("Đầu–giữa mùa và cuối mùa:\n", by_part.round(0).to_string())
 
 
 if __name__ == "__main__":

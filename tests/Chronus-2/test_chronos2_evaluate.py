@@ -5,6 +5,7 @@ import pytest
 
 from evaluate import (
     add_flood_phase,
+    add_season_part,
     compare_with_anom_ar1,
     holm,
     load_predictions,
@@ -70,3 +71,8 @@ def test_phase_boundaries():
 def test_missing_predictions_message(tmp_path):
     with pytest.raises(FileNotFoundError, match="run_forecast.py"):
         load_predictions(tmp_path / "x.csv")
+
+
+def test_season_part_split_at_origin_21():
+    pred = pd.DataFrame({"t": [3, 20, 21, 26]})
+    assert list(add_season_part(pred)["season_part"]) == ["t<=20", "t<=20", "t>=21", "t>=21"]
