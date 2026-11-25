@@ -1,7 +1,7 @@
 """BƯỚC 4 – Vẽ toàn bộ hình cho báo cáo GAM (đọc bảng của bước 2 và 3).
 
-Chạy từ gốc repo:  python src/GAM/process/figures.py
-Ghi vào src/GAM/result/figures/*.png. Thứ tự hình theo đúng thứ tự trong docs/bao_cao_gam.md.
+Chạy từ gốc repo:  python src/GAM/figures.py
+Ghi vào results/GAM/figures/*.png.
 """
 from __future__ import annotations
 

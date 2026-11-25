@@ -1,4 +1,4 @@
-"""Test mô hình GAM viết lại.  Chạy từ gốc repo:  pytest src/GAM/test
+"""Test mô hình GAM viết lại.  Chạy từ gốc repo:  pytest tests/GAM
 
 Nhóm 1 – đúng với mô hình chung của nhóm (floodbench.models.stat.gam).
 Nhóm 2 – đáp án biết trước trên dữ liệu giả.

@@ -1,10 +1,10 @@
-"""Hằng số, đường dẫn và vài hàm nhỏ dùng chung cho mọi bước của thư mục src/GAM/.
+"""Hằng số, đường dẫn và vài hàm nhỏ dùng chung cho mọi bước của GAM (src/GAM/).
 
 Không có logic mô hình ở đây; mô hình nằm ở `gam_model.py`.
+Bố cục theo quy ước chung của nhóm: code ở src/GAM/, kết quả ở results/GAM/,
+dữ liệu sinh ra ở data/processed/GAM/, test ở tests/GAM/.
 """
 from __future__ import annotations
-
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -13,10 +13,10 @@ from floodbench.data.regions import load_region, repo_root  # cấu hình vùng 
 from floodbench.features import to_wide  # bảng dài (mùa, bước) -> ma trận Y[mùa, bước]
 
 # ---- Đường dẫn -----------------------------------------------------------------------------
-GAM_DIR = Path(__file__).resolve().parents[1]  # = src/GAM/
-DATASET = GAM_DIR / "dataset"
-TABLES = GAM_DIR / "result" / "tables"
-FIGURES = GAM_DIR / "result" / "figures"
+ROOT = repo_root()                               # thư mục gốc repo
+DATASET = ROOT / "data" / "processed" / "GAM"     # bảng đầu vào để xem (bước 1)
+TABLES = ROOT / "results" / "GAM" / "tables"      # bảng kết quả (bước 2, 3)
+FIGURES = ROOT / "results" / "GAM" / "figures"    # hình (bước 4)
 # Bảng dự báo chung của cả nhóm (do `python -m floodbench.benchmark` sinh). Chỉ ĐỌC, không ghi.
 TEAM_PREDICTIONS = repo_root() / "results" / "tables" / "probe_predictions.csv"
 

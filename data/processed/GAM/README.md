@@ -3,7 +3,7 @@
 Thư mục này **không chứa dữ liệu gốc**. Nguồn duy nhất là bảng Level 1 chung của nhóm:
 `data/processed/mekong/level1_series.csv` (21 mùa × 27 bước, diện tích ngập km² toàn ĐBSCL).
 
-Hai file ở đây do `python src/GAM/process/build_dataset.py` sinh ra, **chỉ để xem**:
+Hai file ở đây do `python src/GAM/build_dataset.py` sinh ra, **chỉ để xem**:
 
 | File | Nội dung |
 |---|---|

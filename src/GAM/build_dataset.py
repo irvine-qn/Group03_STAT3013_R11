@@ -1,10 +1,10 @@
 """BƯỚC 1 – Dựng bảng dữ liệu đầu vào của GAM.
 
-Chạy từ gốc repo:  python src/GAM/process/build_dataset.py
+Chạy từ gốc repo:  python src/GAM/build_dataset.py
 
 Đọc  : data/processed/mekong/level1_series.csv (bảng Level 1 chung của nhóm, chỉ đọc)
-Ghi  : src/GAM/dataset/gam_rows.csv          mọi dòng dự báo của mùa 2003–2020, 3 tầm
-       src/GAM/dataset/dataset_summary.csv   vài con số kiểm tra nhanh
+Ghi  : data/processed/GAM/gam_rows.csv          mọi dòng dự báo của mùa 2003–2020, 3 tầm
+       data/processed/GAM/dataset_summary.csv   vài con số kiểm tra nhanh
 
 Bảng gam_rows.csv chỉ để XEM (mở bằng Excel cũng được): mỗi dòng là một lần dự báo, đủ cột
 đầu vào (doy_target, a_t, a_t1) và mục tiêu (anomaly_target). Bước 2 KHÔNG đọc file này mà tự

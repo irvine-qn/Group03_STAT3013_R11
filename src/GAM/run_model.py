@@ -1,13 +1,13 @@
 """BƯỚC 2 – Chạy GAM theo đúng giao thức của nhóm và lưu mọi thứ cần cho phân tích.
 
-Chạy từ gốc repo:  python src/GAM/process/run_model.py      (khoảng 2–4 phút)
+Chạy từ gốc repo:  python src/GAM/run_model.py      (khoảng 2–4 phút)
 
 Giao thức (giống `floodbench.benchmark`):
   - Rolling origin theo năm: mỗi mùa test Y = 2010..2020 học trên các mùa 2003..Y-1.
   - Biến thể "_w7": chỉ học 7 mùa gần nhất (để xem mô hình cần bao nhiêu dữ liệu).
   - 3 tầm: 1, 2, 4 bước = 8, 16, 32 ngày. Mỗi (fold, tầm) chọn cấu hình riêng.
 
-Ghi vào src/GAM/result/tables/:
+Ghi vào results/GAM/tables/:
   gam_predictions.csv     mỗi dòng một dự báo (gam, gam_w7) + AnomAR1 cùng fold để so sánh
   gam_chosen_configs.csv  cấu hình được chọn + MSE validation của cả 6 cấu hình
   gam_coefficients.csv    β0, β1, β2, bậc tự do hiệu dụng của hàm trơn, ở từng fold/tầm

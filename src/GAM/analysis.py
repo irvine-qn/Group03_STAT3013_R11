@@ -1,8 +1,8 @@
 """BƯỚC 3 – Phân tích kết quả GAM (chỉ đọc file của bước 2, không học lại mô hình).
 
-Chạy từ gốc repo:  python src/GAM/process/analysis.py
+Chạy từ gốc repo:  python src/GAM/analysis.py
 
-Ghi vào src/GAM/result/tables/:
+Ghi vào results/GAM/tables/:
   gam_rmse.csv              RMSE gộp 8/16/32 ngày: GAM, AnomAR1, bản 7 mùa và vài mô hình tham chiếu
   gam_vs_anom_ar1.csv       so với AnomAR1 ở CẤP MÙA: tỉ lệ RMSE, số mùa thắng, CI, p, Holm, TOST
   gam_season_rmse.csv       RMSE và thiên lệch của từng mùa test
