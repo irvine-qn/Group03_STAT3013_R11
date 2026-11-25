@@ -13,10 +13,10 @@ và `SEED` của `models/ml.py`, rồi ghi thêm những gì `benchmark` không 
 
 Seed chỉ đổi bagging (`subsample=0.8`). Chạy nhiều seed là phân tích độ ổn định, không dùng để
 chọn seed tốt nhất. Chạy từ gốc repo:
-`python src/LightGBM/process/lightgbm_diag.py [region] [số seed]`,
-`python src/LightGBM/process/lightgbm_diag.py extras [region]` và
-`python src/LightGBM/process/lightgbm_diag.py seasons [region]`.
-Kết quả ghi vào `src/LightGBM/result/{tables,figures}`; `results/tables/probe_predictions.csv`
+`python src/LightGBM/lightgbm_diag.py [region] [số seed]`,
+`python src/LightGBM/lightgbm_diag.py extras [region]` và
+`python src/LightGBM/lightgbm_diag.py seasons [region]`.
+Kết quả ghi vào `results/LightGBM/{tables,figures}`; `results/tables/probe_predictions.csv`
 (do benchmark chung sinh ra) chỉ được đọc.
 """
 # Cho phép dùng chú thích kiểu (type hint) mới (vd. `list[int]`) kể cả trên Python 3.10;
@@ -24,7 +24,6 @@ Kết quả ghi vào `src/LightGBM/result/{tables,figures}`; `results/tables/pro
 from __future__ import annotations
 
 import sys  # đọc tham số dòng lệnh (sys.argv) và đổi mã hóa in ra màn hình
-from pathlib import Path  # làm việc với đường dẫn file/thư mục
 
 import lightgbm as lgb  # thư viện gradient boosting: mô hình đang được chẩn đoán
 import numpy as np  # mảng số và các phép toán vector hóa
@@ -44,8 +43,8 @@ from floodbench.models.tuning import pick_config  # chọn cấu hình bằng va
 # BASE = "anom_ar1" (mô hình đối chứng); PHASES = các giai đoạn lũ theo ngày trong năm
 from floodbench.report_tables import BASE, PHASES
 
-# Thư mục `result/` nằm cạnh thư mục chứa file này (parents[1] = src/LightGBM/)
-RESULT = Path(__file__).resolve().parents[1] / "result"
+# Kết quả của LightGBM nằm ở results/LightGBM/ (cùng cấp với results/ của các mô hình khác)
+RESULT = repo_root() / "results" / "LightGBM"
 # Nơi ghi các bảng csv và các hình png
 TABLES, FIGURES = RESULT / "tables", RESULT / "figures"
 
