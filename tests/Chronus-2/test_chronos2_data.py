@@ -1,9 +1,9 @@
-"""Test đọc dữ liệu đầu vào (flood_data.py)."""
+"""Test đọc dữ liệu đầu vào (chronos2_data.py)."""
 import numpy as np
 import pandas as pd
 import pytest
 
-from flood_data import REPO_ROOT, load_config, load_flood_matrix, step_to_doy
+from chronos2_data import REPO_ROOT, load_config, load_flood_matrix, step_to_doy
 
 
 def test_real_matrix_shape():

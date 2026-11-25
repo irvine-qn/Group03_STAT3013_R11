@@ -1,9 +1,9 @@
-"""Test bước 2 (evaluate.py): các thước đo và kiểm định có đáp án biết trước."""
+"""Test bước 2 (chronos2_evaluate.py): các thước đo và kiểm định có đáp án biết trước."""
 import numpy as np
 import pandas as pd
 import pytest
 
-from evaluate import (
+from chronos2_evaluate import (
     add_flood_phase,
     add_season_part,
     compare_with_anom_ar1,
@@ -69,7 +69,7 @@ def test_phase_boundaries():
 
 
 def test_missing_predictions_message(tmp_path):
-    with pytest.raises(FileNotFoundError, match="run_forecast.py"):
+    with pytest.raises(FileNotFoundError, match="chronos2_forecast.py"):
         load_predictions(tmp_path / "x.csv")
 
 

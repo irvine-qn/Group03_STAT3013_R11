@@ -24,15 +24,16 @@ Lấy **trung vị** (phân vị 0,5) làm dự báo điểm.
 
 ```
 data/processed/level1_series.csv
-        │  flood_data.py      đọc thành ma trận Y: 21 mùa × 27 bước (km² ngập)
-        ▼
-   protocol.py               climatology 5 mùa trước, anomaly, gốc dự báo, mùa huấn luyện, AnomAR1
         │
-   chronos_model.py          ngữ cảnh anomaly bước 1..t → Chronos-2 → trung vị 4 bước tới
+   chronos2_data.py       đọc thành ma trận Y: 21 mùa × 27 bước (km² ngập)
+        │
+   chronos2_protocol.py   climatology 5 mùa trước, anomaly, gốc dự báo, mùa huấn luyện, AnomAR1
+        │
+   chronos2_model.py      ngữ cảnh anomaly bước 1..t → Chronos-2 → trung vị 4 bước tới
         ▼
-   run_forecast.py  (bước 1) 11 mùa test × mọi gốc t × tầm 8/16/32 ngày → predictions.csv
+   chronos2_forecast.py   (bước 1) 11 mùa test × mọi gốc t × tầm 8/16/32 ngày → predictions.csv
         ▼
-   evaluate.py      (bước 2) RMSE, kiểm định cấp mùa, bảng theo điều kiện, hình
+   chronos2_evaluate.py   (bước 2) RMSE, kiểm định cấp mùa, bảng theo điều kiện, hình
 ```
 
 Ngữ cảnh đưa vào là **anomaly** (giá trị − climatology) của **chính mùa đang dự báo**, bước 1 đến t.
@@ -45,8 +46,8 @@ cách nhau khoảng 150 ngày khô nên không nối thành một chuỗi liền
 uv venv .venv --python 3.12
 uv pip install --python .venv\Scripts\python.exe -r requirements.txt
 
-.venv\Scripts\python.exe src/Chronus-2/run_forecast.py   # bước 1, lần đầu tải trọng số model từ Hugging Face
-.venv\Scripts\python.exe src/Chronus-2/evaluate.py       # bước 2
+.venv\Scripts\python.exe src/Chronus-2/chronos2_forecast.py   # bước 1, lần đầu tải trọng số model từ Hugging Face
+.venv\Scripts\python.exe src/Chronus-2/chronos2_evaluate.py       # bước 2
 .venv\Scripts\python.exe -m pytest tests/Chronus-2       # 26 test, dùng pipeline giả, không cần model
 ```
 

@@ -1,9 +1,9 @@
-"""Test luật chơi chung (protocol.py): climatology, gốc dự báo, AnomAR1."""
+"""Test luật chơi chung (chronos2_protocol.py): climatology, gốc dự báo, AnomAR1."""
 import numpy as np
 import pytest
 
-from flood_data import load_config, load_flood_matrix
-from protocol import (
+from chronos2_data import load_config, load_flood_matrix
+from chronos2_protocol import (
     anom_ar1_forecast,
     climatology,
     estimate_phi,

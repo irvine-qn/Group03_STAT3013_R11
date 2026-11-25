@@ -1,11 +1,11 @@
-"""Test Chronos-2 zero-shot (chronos_model.py) bằng pipeline giả: không tải model thật."""
+"""Test Chronos-2 zero-shot (chronos2_model.py) bằng pipeline giả: không tải model thật."""
 import numpy as np
 import torch
 
 from chronos2_fakes import FakePipeline
-from chronos_model import Chronos2ZeroShot, build_anomaly_context
-from flood_data import load_config, load_flood_matrix
-from protocol import climatology
+from chronos2_model import Chronos2ZeroShot, build_anomaly_context
+from chronos2_data import load_config, load_flood_matrix
+from chronos2_protocol import climatology
 
 
 def test_context_contains_only_steps_up_to_origin():

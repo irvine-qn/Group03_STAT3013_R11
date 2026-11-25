@@ -1,9 +1,9 @@
 """Bước 1 – Sinh dự báo Chronos-2 và mốc AnomAR1 cho 11 mùa test (rolling origin theo năm).
 
-Chạy:  python src/Chronus-2/run_forecast.py
+Chạy:  python src/Chronus-2/chronos2_forecast.py
 Kết quả: results/Chronus-2/tables/predictions.csv, mỗi dòng là một dự báo:
     season, t, doy_target, y_target, model, h, pred
-(cùng cột với bảng chung của nhóm để ghép được). Bước 2 là evaluate.py.
+(cùng cột với bảng chung của nhóm để ghép được). Bước 2 là chronos2_evaluate.py.
 
 Rolling origin: với mùa test Y, AnomAR1 ước lượng φ từ các mùa 2003..Y−1 rồi dự báo mùa Y.
 Chronos-2 không học gì từ các mùa trước; nó chỉ cần climatology (5 mùa trước) để tính anomaly.
@@ -14,9 +14,9 @@ import sys
 
 import pandas as pd
 
-from chronos_model import Chronos2ZeroShot, build_anomaly_context, load_pipeline
-from flood_data import REPO_ROOT, load_config, load_flood_matrix, step_to_doy
-from protocol import (
+from chronos2_model import Chronos2ZeroShot, build_anomaly_context, load_pipeline
+from chronos2_data import REPO_ROOT, load_config, load_flood_matrix, step_to_doy
+from chronos2_protocol import (
     HORIZONS,
     TEST_SEASONS,
     anom_ar1_forecast,

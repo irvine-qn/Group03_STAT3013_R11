@@ -1,12 +1,12 @@
-"""Test bước 1 (run_forecast.py) trên dữ liệu thật, với pipeline giả thay cho Chronos-2."""
+"""Test bước 1 (chronos2_forecast.py) trên dữ liệu thật, với pipeline giả thay cho Chronos-2."""
 import numpy as np
 import pytest
 
 from chronos2_fakes import FakePipeline
-from chronos_model import Chronos2ZeroShot
-from flood_data import load_config, load_flood_matrix, step_to_doy
-from protocol import climatology
-from run_forecast import make_predictions
+from chronos2_model import Chronos2ZeroShot
+from chronos2_data import load_config, load_flood_matrix, step_to_doy
+from chronos2_protocol import climatology
+from chronos2_forecast import make_predictions
 
 
 @pytest.fixture(scope="module")

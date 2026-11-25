@@ -1,6 +1,6 @@
 """Bước 2 – Đánh giá Chronos-2 so với mốc AnomAR1, sinh bảng và hình.
 
-Chạy (sau run_forecast.py):  python src/Chronus-2/evaluate.py
+Chạy (sau chronos2_forecast.py):  python src/Chronus-2/chronos2_evaluate.py
 Đọc:  results/Chronus-2/tables/predictions.csv
 Ghi:  results/Chronus-2/tables/
         rmse.csv               RMSE gộp theo mô hình × tầm
@@ -29,9 +29,9 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-from flood_data import REPO_ROOT, load_config, load_flood_matrix, step_to_doy
-from protocol import HORIZON_DAYS
-from run_forecast import PREDICTIONS_PATH
+from chronos2_data import REPO_ROOT, load_config, load_flood_matrix, step_to_doy
+from chronos2_protocol import HORIZON_DAYS
+from chronos2_forecast import PREDICTIONS_PATH
 
 TABLES = REPO_ROOT / "results" / "Chronus-2" / "tables"
 FIGURES = REPO_ROOT / "results" / "Chronus-2" / "figures"
@@ -47,7 +47,7 @@ LABELS = {"chronos2": "Chronos-2", "anom_ar1": "AnomAR1"}
 
 def load_predictions(path: Path = PREDICTIONS_PATH) -> pd.DataFrame:
     if not Path(path).exists():
-        raise FileNotFoundError(f"không thấy {path}; hãy chạy run_forecast.py trước")
+        raise FileNotFoundError(f"không thấy {path}; hãy chạy chronos2_forecast.py trước")
     return pd.read_csv(path)
 
 

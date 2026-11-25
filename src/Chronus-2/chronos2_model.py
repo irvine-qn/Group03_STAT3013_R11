@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from protocol import climatology
+from chronos2_protocol import climatology
 
 MODEL_ID = "amazon/chronos-2"
 MEDIAN = 0.5  # lấy phân vị 0,5 (trung vị) của phân phối dự báo làm dự báo điểm
