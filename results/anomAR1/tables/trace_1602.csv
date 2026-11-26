@@ -1,0 +1,16 @@
+series,first_t,model,1,2,4
+old_report,,persistence,1299.0,2003.0,3326.0
+old_report,,clim5,1767.0,1787.0,1844.0
+old_report,,anom_ar1,1089.0,1312.0,1602.0
+mean,3,persistence,1312.5,2067.6,3455.9
+mean,3,clim5,1812.1,1845.4,1916.4
+mean,3,anom_ar1,1089.6,1375.4,1687.1
+mean,1,persistence,1298.6,2001.9,3322.3
+mean,1,clim5,1767.9,1787.8,1845.4
+mean,1,anom_ar1,1093.9,1338.9,1628.6
+nearest,3,persistence,1312.4,2068.8,3460.1
+nearest,3,clim5,1811.1,1844.5,1915.2
+nearest,3,anom_ar1,1089.0,1374.3,1686.1
+nearest,1,persistence,1298.7,2003.0,3326.3
+nearest,1,clim5,1767.1,1786.7,1844.5
+nearest,1,anom_ar1,1093.5,1337.7,1627.8

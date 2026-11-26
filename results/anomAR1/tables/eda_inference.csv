@@ -1,0 +1,6 @@
+test,statistic,p,note
+Mann-Kendall (peak ~ year),-0.6952380952380953,1.5853263558114176e-06,tau
+OLS HC3 (peak ~ year),-313.9244675324561,6.574081103247168e-14,"km2/year, CI95 [-396; -232], R2=0.770"
+Mann-Whitney (peak before vs from 2010),101.0,0.001355261238140501,"median 14619 vs 10860, n=10/11"
+Levene (peak before vs from 2010),0.018758651499443037,0.8925015654476088,std 1413 vs 1641
+Kruskal-Wallis (peak_doy by flood size),0.5338809034907663,0.76571866731795,3 groups by peak tercile
