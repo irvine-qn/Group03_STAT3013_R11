@@ -1,9 +1,0 @@
-station,area_metric,gauge_metric,n,first_season,last_season,r_levels,rho_levels,r_detrended,r_detrended_ci_low,r_detrended_ci_high,r_first_diff
-TanChau,peak_km2,Max. WL (m),17,2000,2016,0.865,0.875,0.669,0.277,0.87,0.681
-TanChau,peak_km2,High-flow WL (m),17,2000,2016,0.877,0.868,0.66,0.263,0.866,0.691
-TanChau,mean_km2,High-flow WL (m),17,2000,2016,0.923,0.931,0.813,0.546,0.93,0.857
-TanChau,mean_km2,Mean WL (m),17,2000,2016,0.848,0.904,0.635,0.222,0.855,0.816
-MyThuan,peak_km2,Max. WL (m),16,2000,2015,0.844,0.837,0.621,0.181,0.854,0.743
-MyThuan,peak_km2,High-flow WL (m),16,2000,2015,0.832,0.811,0.481,-0.019,0.789,0.629
-MyThuan,mean_km2,High-flow WL (m),16,2000,2015,0.83,0.855,0.591,0.134,0.84,0.799
-MyThuan,mean_km2,Mean WL (m),16,2000,2015,0.774,0.794,0.483,-0.017,0.79,0.797
