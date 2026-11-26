@@ -1,6 +1,10 @@
 # Group 03
 
-The project is intended to run locally on Windows
+Flood-extent forecasting for the Vietnamese Mekong Delta: four models compared
+against the AnomAR1 baseline on the same protocol (11 test seasons 2010–2020,
+yearly rolling origin, horizons of 8, 16 and 32 days).
+
+The project is intended to run locally on Windows.
 
 ## Local setup
 
@@ -12,21 +16,44 @@ py -3.12 -m venv .venv
 python -m pip install -r requirements.txt
 ```
 
-Once the source package has been added under `src/floodbench/`, install it in
-editable mode:
+## Models
 
-```powershell
-python -m pip install -e .
-```
+Each model is self-contained: its code is in `src/<Model>/`, its tests in
+`tests/<Model>/`, its outputs in `results/<Model>/` and its overview notebook in
+`notebooks/<Model>/`. Start from the notebook; the `README.md` in each `src/`
+folder lists the scripts in the order to run them.
 
-After the source package, data, and generated result tables are in place, run
-the interactive report with:
+| Model | Family | Source | Overview notebook |
+|---|---|---|---|
+| AnomAR1 | statistical baseline | [`src/AnomAR1/`](src/AnomAR1/) | [`notebooks/AnomAR1/`](notebooks/AnomAR1/) |
+| GAM | statistical | [`src/GAM/`](src/GAM/) | [`notebooks/GAM/`](notebooks/GAM/) |
+| LightGBM | machine learning | [`src/LightGBM/`](src/LightGBM/) | [`notebooks/LightGBM/`](notebooks/LightGBM/) |
+| Chronos-2 | foundation model, zero-shot | [`src/Chronos-2/`](src/Chronos-2/) | [`notebooks/Chronos-2/`](notebooks/Chronos-2/) |
+
+### Shared result tables
+
+Every model writes the same three tables to `results/<Model>/tables/`, so they
+can be combined:
+
+| File | Columns |
+|---|---|
+| `predictions.csv` | `season, t, doy_target, y_target, model, h, pred` (one row per forecast) |
+| `rmse.csv` | `model, 1, 2, 4` (pooled RMSE in km² for horizons h = 1, 2, 4 steps = 8, 16, 32 days) |
+| `vs_anom_ar1.csv` | `model, h, n_seasons, rmse_ratio, wins, mse_diff_pct, mse_diff_pct_ci_low, mse_diff_pct_ci_high, p_t, p_wilcoxon, p_tost, p_t_holm` (season-level tests against AnomAR1, n = 11) |
+
+Other tables in each folder are specific to that model.
+
+## Interactive report
+
+Reads the shared tables of all four models:
 
 ```powershell
 streamlit run app/streamlit_app.py
 ```
 
-Run tests from the project root with:
+## Tests
+
+Run from the project root:
 
 ```powershell
 python -m pytest
@@ -43,21 +70,13 @@ Group03_STAT3013_R11/
 │       └── mekong.yaml       # Per-region settings (paths relative to project root)
 ├── data/
 │   ├── raw/                  # Source datasets (not committed)
-│   └── processed/            # Derived datasets
+│   └── processed/            # Derived datasets (level1_series.csv is the shared input)
 ├── docs/                     # Project documentation
-├── notebooks/                # Exploratory notebooks (nếu chốt chạy streamlit thì sẽ không cần notebook)
+├── notebooks/                # Overview notebook of each model (Vietnamese and English)
 ├── results/                  # Model outputs, one folder per model
-│   ├── AnomAR1/
-│   ├── Chronos-2/
-│   ├── GAM/
-│   └── LightGBM/
 ├── src/                      # Model source code, one folder per model
-│   ├── AnomAR1/
-│   ├── Chronos-2/
-│   ├── GAM/
-│   └── LightGBM/
-├── tests/                    # Bộ test chung, đối với test riêng thì cập nhật vào thư mục test lớn, test riêng của model thì ở thư mục con của nó
-├── pyproject.toml            # Project metadata
+├── tests/                    # Tests, one folder per model
+├── pyproject.toml            # Project metadata and pytest settings
 ├── requirements.txt          # Pinned runtime dependencies
 └── README.md
 ```
