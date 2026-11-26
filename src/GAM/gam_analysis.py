@@ -3,9 +3,11 @@
 Chạy từ gốc repo:  python src/GAM/gam_analysis.py
 
 Ghi vào results/GAM/tables/:
-  gam_rmse.csv              RMSE gộp 8/16/32 ngày: GAM, AnomAR1, bản 7 mùa và 2 baseline
-  gam_vs_anom_ar1.csv       so với AnomAR1 ở CẤP MÙA: tỉ lệ RMSE, số mùa thắng, CI, p, Holm, TOST
-                            (Holm trong 3 tầm của từng phép so sánh)
+  rmse.csv                  RMSE gộp theo mô hình × tầm h (1, 2, 4): GAM, AnomAR1, bản 7 mùa và 2 baseline
+                            (cùng dạng với mọi mô hình của nhóm)
+  vs_anom_ar1.csv           GAM so với AnomAR1 ở CẤP MÙA: tỉ lệ RMSE, số mùa thắng, CI, p, Holm, TOST
+                            (cùng cột với mọi mô hình của nhóm; Holm trong 3 tầm)
+  gam_w7_vs_anom_ar1_w7.csv cùng phép so sánh cho bản chỉ học 7 mùa (mốc là anom_ar1_w7)
   gam_season_rmse.csv       RMSE và thiên lệch của từng mùa test
   gam_by_phase.csv          RMSE theo giai đoạn lũ (nước lên / đỉnh / nước rút)
   gam_by_magnitude.csv      RMSE theo cỡ lũ của mùa test, đủ mùa và 7 mùa
@@ -31,28 +33,19 @@ RMSE_ORDER = ["gam", BASELINE, "gam_w7", "anom_ar1_w7", "clim5", "persistence"]
 
 
 def rmse_table(pred: pd.DataFrame) -> pd.DataFrame:
-    """RMSE gộp mọi dòng của 11 mùa test, theo (mô hình, tầm)."""
+    """Bảng chuẩn rmse.csv: RMSE gộp mọi dòng của 11 mùa test; dòng = mô hình, cột = tầm h."""
     out = (pred.assign(sq=(pred["y_target"] - pred["pred"]) ** 2)
                .groupby(["model", "h"])["sq"].mean().pow(0.5).unstack("h"))
-    out.columns = [f"rmse_{DAYS[h]}d" for h in out.columns]
     return out.loc[RMSE_ORDER].reset_index()
 
 
-def versus_baseline(pred: pd.DataFrame) -> pd.DataFrame:
-    """Kiểm định cấp mùa: GAM so với AnomAR1, và GAM_w7 so với AnomAR1_w7 (cùng lượng dữ liệu).
+def versus_baseline(pred: pd.DataFrame, model: str = "gam", base: str = BASELINE) -> pd.DataFrame:
+    """Kiểm định cấp mùa của `model` so với `base` ở 3 tầm; Holm hiệu chỉnh trong 3 tầm đó.
 
-    Mỗi phép so sánh là một họ 3 tầm; Holm hiệu chỉnh trong họ đó.
+    Dùng cho GAM so với AnomAR1 (bảng chuẩn), và GAM_w7 so với AnomAR1_w7 (cùng lượng dữ liệu).
     """
-    cols = ["model", "h", "season", "y_target", "pred"]
-    out = []
-    for model, base, label in (("gam", BASELINE, "gam vs anom_ar1 (đủ mùa)"),
-                               ("gam_w7", "anom_ar1_w7", "gam_w7 vs anom_ar1_w7 (7 mùa)")):
-        pair = pred[pred["model"].isin([model, base])][cols]
-        pair = pair.assign(model=pair["model"].str.removesuffix("_w7"))  # đặt cùng tên gam / anom_ar1
-        out.append(compare_to_baseline(season_mse(pair), BASELINE).assign(comparison=label))
-    out = pd.concat(out, ignore_index=True)
-    out.insert(2, "h_days", out["h"].map(DAYS))
-    return out
+    pair = pred[pred["model"].isin([model, base])][["model", "h", "season", "y_target", "pred"]]
+    return compare_to_baseline(season_mse(pair), base)
 
 
 def season_table(pred: pd.DataFrame) -> pd.DataFrame:
@@ -191,12 +184,14 @@ def ablation_table(pred: pd.DataFrame) -> pd.DataFrame:
 def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")
     cfg, Y = load_data()
-    pred = pd.read_csv(TABLES / "gam_predictions.csv")
+    pred = pd.read_csv(TABLES / "predictions.csv")
     main_pred = pred[pred["model"].isin(["gam", BASELINE])]
 
     tables = {
-        "gam_rmse": rmse_table(pred),
-        "gam_vs_anom_ar1": versus_baseline(pred),
+        # Hai bảng chuẩn của nhóm: làm tròn như các mô hình khác
+        "rmse": rmse_table(pred).round(0),
+        "vs_anom_ar1": versus_baseline(pred).round(4),
+        "gam_w7_vs_anom_ar1_w7": versus_baseline(pred, "gam_w7", "anom_ar1_w7"),
         "gam_season_rmse": season_table(pred),
         "gam_by_phase": condition_table(main_pred, "phase", ["gam", BASELINE]),
         "gam_by_magnitude": condition_table(pred, "size", ["gam", BASELINE, "gam_w7", "anom_ar1_w7"]),

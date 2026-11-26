@@ -8,8 +8,9 @@ Giao thức (gam_protocol.py, giống benchmark thăm dò của nhóm):
   - 3 tầm: 1, 2, 4 bước = 8, 16, 32 ngày. Mỗi (fold, tầm) chọn cấu hình riêng.
 
 Ghi vào results/GAM/tables/:
-  gam_predictions.csv     mỗi dòng một dự báo: gam, gam_w7 và các mốc so sánh trên CÙNG fold
-                          (anom_ar1, anom_ar1_w7, clim5, persistence)
+  predictions.csv         mỗi dòng một dự báo: gam, gam_w7 và các mốc so sánh trên CÙNG fold
+                          (anom_ar1, anom_ar1_w7, clim5, persistence); cùng 7 cột với mọi mô hình
+                          của nhóm. Dự báo clim5 chính là mức bình thường c_target.
   gam_chosen_configs.csv  cấu hình được chọn + MSE validation của cả 6 cấu hình
   gam_coefficients.csv    β0, β1, β2, bậc tự do hiệu dụng của hàm trơn, ở từng fold/tầm
   gam_seasonal_curve.csv  đường β0 + s(ngày) của từng fold/tầm (để vẽ)
@@ -29,6 +30,7 @@ from gam_protocol import anom_ar1, build_rows, clim5, persistence, rolling_origi
 from gam_model import GAM_GRID, anomaly_target, coefficients, design_matrix, gam_forecast, seasonal_curve
 
 DOY_GRID = np.arange(177, 362, 4)  # ngày đích có thể có: bước 4 (ngày 177) .. bước 27 (ngày 361)
+COLUMNS = ["season", "t", "doy_target", "y_target", "model", "h", "pred"]  # bảng dự báo chung của nhóm
 
 
 def run(Y: np.ndarray, cfg, windows=((None, ""), (WINDOW, "_w7"))) -> dict[str, pd.DataFrame]:
@@ -94,7 +96,7 @@ def main() -> None:
     cfg, Y = load_data()
     print("Chạy GAM trên 11 fold x 3 tầm, đủ mùa và 7 mùa ...")
     res = run(Y, cfg)
-    res["predictions"].to_csv(TABLES / "gam_predictions.csv", index=False)
+    res["predictions"][COLUMNS].to_csv(TABLES / "predictions.csv", index=False)
     res["configs"].to_csv(TABLES / "gam_chosen_configs.csv", index=False)
     res["coefficients"].to_csv(TABLES / "gam_coefficients.csv", index=False)
     res["curves"].to_csv(TABLES / "gam_seasonal_curve.csv", index=False)

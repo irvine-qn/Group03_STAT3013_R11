@@ -213,13 +213,13 @@ def fig_seasonal_curve():
 
 # ---- Hình 7: RMSE tổng thể ----------------------------------------------------------------------
 def fig_rmse():
-    r = pd.read_csv(TABLES / "gam_rmse.csv").set_index("model")
+    r = pd.read_csv(TABLES / "rmse.csv").set_index("model")
     models = ["persistence", "clim5", BASELINE, "gam"]
     colors = [C_OTHER, "#d4d4d4", C_AR1, C_GAM]
     fig, ax = plt.subplots(figsize=(11, 4.2))
     width = 0.2
     for k, (m, col) in enumerate(zip(models, colors)):
-        vals = [r.loc[m, f"rmse_{DAYS[h]}d"] for h in HORIZONS]
+        vals = [r.loc[m, str(h)] for h in HORIZONS]  # cột của rmse.csv là tầm h: "1", "2", "4"
         xs = np.arange(3) + (k - 1.5) * width
         ax.bar(xs, vals, width, color=col, label=NAMES[m], ec="white")
         if m in ("gam", BASELINE):
@@ -235,8 +235,7 @@ def fig_rmse():
 # ---- Hình 8: từng mùa test ----------------------------------------------------------------------
 def fig_seasons_ratio():
     s = pd.read_csv(TABLES / "gam_season_rmse.csv")
-    t = pd.read_csv(TABLES / "gam_vs_anom_ar1.csv")
-    t = t[t["comparison"].str.startswith("gam vs")]
+    t = pd.read_csv(TABLES / "vs_anom_ar1.csv")
     fig, axes = plt.subplots(1, 3, figsize=(14, 4), sharey=True)
     for ax, h in zip(axes, HORIZONS):
         g = s[s["h"] == h]
@@ -282,7 +281,7 @@ def fig_conditions():
 
 # ---- Hình 10: phần dư -----------------------------------------------------------------------------
 def fig_residuals():
-    p = pd.read_csv(TABLES / "gam_predictions.csv").query("model == 'gam'")
+    p = pd.read_csv(TABLES / "predictions.csv").query("model == 'gam'")
     summ = pd.read_csv(TABLES / "gam_residual_summary.csv").set_index("h")
     fig, axes = plt.subplots(3, 3, figsize=(14, 10))
     for col, h in enumerate(HORIZONS):
@@ -320,15 +319,16 @@ def fig_residuals():
 
 # ---- Hình 11: hai mùa tiêu biểu ------------------------------------------------------------------
 def fig_two_seasons(h=2):
-    p = pd.read_csv(TABLES / "gam_predictions.csv")
+    p = pd.read_csv(TABLES / "predictions.csv")
     s = pd.read_csv(TABLES / "gam_season_rmse.csv").query("h == @h")
     best, worst = s.loc[s["ratio"].idxmin()], s.loc[s["ratio"].idxmax()]
     fig, axes = plt.subplots(1, 2, figsize=(13, 4.2), sharey=True)
     for ax, row, tag in zip(axes, [best, worst], ["GAM tốt hơn rõ nhất", "GAM kém hơn rõ nhất"]):
         g = p[(p["season"] == row.season) & (p["h"] == h)]
         gam, ar = g[g["model"] == "gam"].sort_values("doy_target"), g[g["model"] == BASELINE].sort_values("doy_target")
+        clim = g[g["model"] == "clim5"].sort_values("doy_target")  # dự báo clim5 = mức bình thường c_target
         ax.plot(gam["doy_target"], gam["y_target"] / 1000, color=C_OBS, lw=2, label="Thật")
-        ax.plot(gam["doy_target"], gam["c_target"] / 1000, "--", color=C_CLIM, label="Mức bình thường c")
+        ax.plot(clim["doy_target"], clim["pred"] / 1000, "--", color=C_CLIM, label="Mức bình thường c")
         ax.plot(gam["doy_target"], gam["pred"] / 1000, "o-", ms=3, color=C_GAM, label=f"GAM (RMSE {row.rmse_gam:,.0f})")
         ax.plot(ar["doy_target"], ar["pred"] / 1000, "s-", ms=3, color=C_AR1, label=f"AnomAR1 (RMSE {row.rmse_anom_ar1:,.0f})")
         ax.set(title=f"Mùa {int(row.season)} – {tag}\n(tỉ lệ RMSE {row.ratio:.2f}, thiên lệch GAM {row.bias_gam:+,.0f} km²)",

@@ -46,12 +46,12 @@ def test_matches_probe_benchmark_for_2010(h):
 
 
 def test_reproduces_saved_predictions_for_one_fold():
-    """Fold 2010, tầm 16 ngày: phải trùng results/GAM/tables/gam_predictions.csv đã lưu."""
+    """Fold 2010, tầm 16 ngày: phải trùng results/GAM/tables/predictions.csv đã lưu."""
     cfg, Y = load_data()
     train = build_rows(Y, cfg, season_index(cfg, range(2003, 2010)), 2)
     test = build_rows(Y, cfg, season_index(cfg, [2010]), 2)
     ours = test.assign(pred=gam_forecast(train, test, 2).pred).set_index("t")["pred"]
-    saved = pd.read_csv(TABLES / "gam_predictions.csv").query("model == 'gam' and h == 2 and season == 2010")
+    saved = pd.read_csv(TABLES / "predictions.csv").query("model == 'gam' and h == 2 and season == 2010")
     np.testing.assert_allclose(ours.loc[saved["t"]].to_numpy(), saved["pred"].to_numpy(), atol=1e-6)
 
 
