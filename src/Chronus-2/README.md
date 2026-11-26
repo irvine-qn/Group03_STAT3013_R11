@@ -46,12 +46,17 @@ cách nhau khoảng 150 ngày khô nên không nối thành một chuỗi liền
 uv venv .venv --python 3.12
 uv pip install --python .venv\Scripts\python.exe -r requirements.txt
 
-.venv\Scripts\python.exe src/Chronus-2/chronos2_forecast.py   # bước 1, lần đầu tải trọng số model từ Hugging Face
-.venv\Scripts\python.exe src/Chronus-2/chronos2_evaluate.py       # bước 2
-.venv\Scripts\python.exe -m pytest tests/Chronus-2       # 26 test, dùng pipeline giả, không cần model
+.venv\Scripts\python.exe src/Chronus-2/chronos2_forecast.py        # bước 1, lần đầu tải trọng số model từ Hugging Face
+.venv\Scripts\python.exe src/Chronus-2/chronos2_evaluate.py        # bước 2
+.venv\Scripts\python.exe src/Chronus-2/chronos2_finetune_check.py  # kiểm tra phụ, cần GPU (mục 7)
+.venv\Scripts\python.exe -m pytest tests/Chronus-2                 # dùng pipeline giả, không cần model
 ```
 
-Dự báo chạy lại khớp bản thăm dò ban đầu của nhóm tới sai số làm tròn máy (≤ 1e-12 km²).
+Kiểm tra lại kết quả:
+- Dự báo chạy lại trên CPU khớp bản thăm dò ban đầu của nhóm tới sai số làm tròn máy (≤ 1e-12 km²).
+- Chạy lại zero-shot trên GPU (RTX 4050, torch CUDA cài riêng trên máy, `requirements.txt` vẫn là bản CPU):
+  1496 dự báo lệch bản CPU tối đa 0,002 km²; RMSE, tỉ lệ, số mùa thắng và mọi p-value trùng tới 4 chữ số.
+  Kết quả chính thức vẫn là bản CPU.
 
 ## 5. Kết quả (11 mùa test 2010–2020)
 
@@ -101,10 +106,37 @@ Hình: `results/Chronus-2/figures/rmse_by_horizon.png`, `rmse_by_origin.png`, `e
 - Chronos-2 nhỉnh hơn một chút khi nước lên (1134 so với 1154 ở 16 ngày) nhưng kém ở đỉnh và khi
   nước rút. Các lát cắt này chỉ để mô tả, chưa kiểm định riêng.
 
-## 7. Hạn chế và cách nói an toàn
+## 7. Kiểm tra phụ: fine-tune có đổi kết luận không? (thăm dò)
 
-- Nói "trên 11 mùa test, Chronos-2 zero-shot không tốt hơn AnomAR1, và kém hơn ở 32 ngày".
-  Không khái quát thành "foundation model kém": chỉ một model, một cách đưa ngữ cảnh, không tinh chỉnh.
+`chronos2_finetune_check.py` fine-tune Chronos-2 trên GPU cho **từng** mùa test, chỉ học từ anomaly
+của các mùa trước nó (2003..Y−1), rồi dự báo như bản zero-shot. Hai cách: `full` (sửa mọi trọng số,
+50 bước, learning rate 1e-6) và `lora` (chỉ học thêm vài ma trận nhỏ, 50 bước, learning rate 1e-5).
+
+RMSE gộp, km² (`results/Chronus-2/tables/finetune_check.csv`):
+
+| Mô hình | 8 ngày | 16 ngày | 32 ngày | 32 ngày, gốc t ≤ 20 | 32 ngày, gốc t ≥ 21 |
+|---|--:|--:|--:|--:|--:|
+| AnomAR1 | 1090 | 1375 | 1687 | 1687 | 1689 |
+| Chronos-2 zero-shot | 1116 | 1412 | 1788 | 1703 | 2236 |
+| Fine-tune full | 1121 | 1403 | 1758 | 1671 | 2213 |
+| Fine-tune LoRA | 1185 | 1501 | 1939 | 1846 | 2425 |
+
+- Fine-tune nhẹ (`full`) gần như **không đổi** so với zero-shot (khoảng ±2%) và vẫn kém AnomAR1 ở 32 ngày.
+- Fine-tune mạnh hơn (`lora`) **tệ hơn** zero-shot ở cả ba tầm: với 7–17 mùa × 27 điểm, model dễ học thuộc.
+- Phần chênh ở cuối mùa (gốc t ≥ 21) **không** giảm khi fine-tune.
+- Khi thử trên riêng mùa 2020, bản LoRA lại trông tốt nhất ở 8 ngày; trên cả 11 mùa thì tệ nhất. Đây là
+  ví dụ thật cho lý do giao thức cấm chọn cấu hình bằng mùa test.
+
+**Vì sao chỉ là thăm dò:** hai cấu hình được chọn sau khi đã thử trên mùa 2020 (có nhìn mùa test),
+không theo quy trình chọn 6 cấu hình bằng 3 mùa cuối của tập học như các mô hình khác; mỗi cấu hình
+chạy một lần trên GPU. Vì vậy bảng này không vào bảng so sánh chính và không kiểm định; nó chỉ cho thấy
+fine-tune **không làm đổi kết luận**.
+
+## 8. Hạn chế và cách nói an toàn
+
+- Nói "trên 11 mùa test, Chronos-2 zero-shot không tốt hơn AnomAR1, và kém hơn ở 32 ngày; fine-tune thử
+  nghiệm cũng không đổi kết luận". Không khái quát thành "foundation model kém": chỉ một model, một cách
+  đưa ngữ cảnh.
 - "Không khác có ý nghĩa" ở 8 và 16 ngày **không** có nghĩa là tương đương: p TOST > 0,05.
 - **Holm ở đây chỉ hiệu chỉnh trong 3 phép so sánh** (Chronos-2 × 3 tầm). Bảng tổng hợp của nhóm
   so sánh nhiều mô hình hơn nên p Holm sẽ lớn hơn (bản thăm dò với 42 phép cho 0,18 ở 32 ngày).
@@ -114,7 +146,7 @@ Hình: `results/Chronus-2/figures/rmse_by_horizon.png`, `rmse_by_origin.png`, `e
 - Mục tiêu là sản phẩm suy diễn từ ảnh MODIS (Vu et al. 2022), không phải đo trực tiếp.
 - Không giải thích nhân quả (đê bao, đập); chỉ nói "phù hợp với".
 
-## 8. Câu hỏi vấn đáp dự kiến
+## 9. Câu hỏi vấn đáp dự kiến
 
 **Zero-shot nghĩa là gì, vậy Chronos-2 có "học" gì từ dữ liệu không?**
 Không. Trọng số giữ nguyên; dữ liệu ĐBSCL chỉ dùng để tính climatology (trừ chu kỳ mùa) và làm ngữ cảnh.
@@ -134,8 +166,12 @@ TOST kiểm định giả thuyết "chênh ít nhất ±5%"; chỉ khi bác bỏ
 Ở đây p TOST ≈ 0,21 nên chưa đủ bằng chứng.
 
 **Vì sao không tinh chỉnh (fine-tune) Chronos-2?**
-Mục tiêu là đánh giá cách dùng zero-shot; tinh chỉnh trên chỉ 7–17 mùa huấn luyện dễ quá khớp, và sẽ phải dành
-ngân sách tinh chỉnh ngang với các mô hình khác.
+Bản chính đánh giá cách dùng zero-shot. Nhóm có thử fine-tune (mục 7), học lại riêng cho từng mùa test:
+bản nhẹ gần như không đổi, bản mạnh hơn tệ đi vì chỉ có 7–17 mùa để học, và vẫn không thắng AnomAR1.
+Muốn đưa fine-tune vào bảng chính thì phải chọn cấu hình đúng giao thức (6 cấu hình, validation 3 mùa cuối).
+
+**Chạy trên GPU thì kết quả có khác không?**
+Bản zero-shot chạy lại trên GPU lệch tối đa 0,002 km² so với CPU, mọi bảng và p-value giữ nguyên.
 
 **φ của AnomAR1 sao khác nhau giữa các tầm?**
 φ được ước lượng trên đúng các dòng huấn luyện của từng tầm (gốc t = 3..27 − h), giống cách các mô hình khác
