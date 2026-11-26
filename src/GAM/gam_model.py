@@ -1,8 +1,8 @@
 """Mô hình GAM, viết lại từng bước cho dễ đọc.
 
-Mô hình này cho ra ĐÚNG dự báo của `floodbench.models.stat.gam` (mô hình chung của nhóm).
-Test `test/test_gam_model.py` kiểm tra điều đó. Mọi thay đổi ở đây phải giữ test đó xanh;
-muốn đổi mô hình thì đổi ở `floodbench` và ghi `docs/decisions.md`, `docs/tuning_log.md`.
+Mô hình giữ đúng đặc tả GAM của benchmark thăm dò của nhóm (cùng đặc trưng, cùng lưới 6 cấu hình,
+cùng cách chọn cấu hình), nên dự báo trùng với bản đã chạy trước đây. Test `tests/GAM/test_gam_model.py`
+khóa lại các dự báo đó; đổi mô hình thì phải chạy lại mọi bước và báo cả nhóm.
 
 ------------------------------------------------------------------------------------------------
 Ý tưởng trong 4 dòng
@@ -26,7 +26,7 @@ GAM có 2 siêu tham số của hàm trơn s(·):
   n_splines : số hàm cơ sở (độ "mềm" tối đa của đường cong)
   lam       : hệ số phạt độ cong (lớn -> đường cong phẳng hơn)
 Lưới cố định 6 cấu hình (ngân sách bằng mọi mô hình). Trong MỖI fold và MỖI tầm, cấu hình được
-chọn bằng `floodbench.models.tuning.pick_config`: học trên các mùa huấn luyện trừ 3 mùa cuối,
+chọn bằng `gam_protocol.pick_config`: học trên các mùa huấn luyện trừ 3 mùa cuối,
 chấm MSE trên 3 mùa cuối đó, lấy cấu hình có MSE nhỏ nhất, rồi học lại trên toàn bộ mùa huấn luyện.
 Mùa test KHÔNG BAO GIỜ được nhìn thấy khi chọn.
 """
@@ -38,9 +38,9 @@ import numpy as np
 import pandas as pd
 from pygam import LinearGAM, l, s  # LinearGAM: GAM với nhiễu chuẩn; s = hàm trơn; l = tuyến tính
 
-from floodbench.models.tuning import pick_config  # hàm chọn cấu hình dùng chung của nhóm
+from gam_protocol import pick_config  # chọn cấu hình bằng 3 mùa cuối của tập học
 
-# 6 cấu hình (n_splines, lam). Giống hệt `floodbench.models.stat.GAM_GRID` (test kiểm tra).
+# 6 cấu hình (n_splines, lam), cùng lưới với benchmark thăm dò (ghi trong nhật ký tinh chỉnh của nhóm).
 GAM_GRID = [(6, 0.1), (6, 1.0), (8, 0.6), (8, 5.0), (12, 1.0), (12, 10.0)]
 
 # Tên 3 cột của ma trận đầu vào, đúng thứ tự cột trong X
@@ -51,7 +51,7 @@ FEATURE_NAMES = ["doy_target", "a_t", "a_t1"]
 def design_matrix(rows: pd.DataFrame) -> np.ndarray:
     """X = [ngày đích, a_t, a_{t-1}] với a = y - c (lệch so với mức bình thường).
 
-    `rows` là bảng của `floodbench.features.build_rows`: mỗi dòng là một gốc dự báo (mùa, bước t).
+    `rows` là bảng của `gam_protocol.build_rows`: mỗi dòng là một gốc dự báo (mùa, bước t).
     """
     a_t = rows["y_t"] - rows["c_t"]      # anomaly hôm nay
     a_t1 = rows["y_t1"] - rows["c_t1"]   # anomaly 8 ngày trước

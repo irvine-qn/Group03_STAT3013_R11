@@ -1,4 +1,4 @@
-"""Cho phép test import trực tiếp các file trong src/GAM/ (gam_model, run_model, ...).
+"""Cho phép test import trực tiếp các file trong src/GAM/ (gam_model, gam_protocol, ...).
 
 pytest tự nạp conftest.py trước các test cùng thư mục. parents[2] của file này là gốc repo
 (parents[0] = tests/GAM/, parents[1] = tests/).

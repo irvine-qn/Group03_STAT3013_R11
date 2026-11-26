@@ -1,6 +1,6 @@
 """Test mô hình GAM viết lại.  Chạy từ gốc repo:  pytest tests/GAM
 
-Nhóm 1 – đúng với mô hình chung của nhóm (floodbench.models.stat.gam).
+Nhóm 1 – không trôi kết quả: khóa vài dự báo của benchmark thăm dò và bảng kết quả đã lưu.
 Nhóm 2 – đáp án biết trước trên dữ liệu giả.
 Nhóm 3 – không rò rỉ: mùa tương lai không được làm đổi dự báo của fold cũ.
 """
@@ -8,11 +8,11 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from floodbench.data.regions import load_region
-from floodbench.features import build_rows
-from common import TEAM_PREDICTIONS, load_data, season_index
+from gam_common import TABLES, load_data, season_index
+from gam_data import load_region
 from gam_model import GAM_GRID, contributions, coefficients, design_matrix, fit_gam, gam_forecast, predict
-from run_model import run
+from gam_protocol import build_rows
+from gam_run_model import run
 
 CFG = load_region("mekong")
 
@@ -22,27 +22,37 @@ def synthetic_Y(seed=0):
     return np.random.default_rng(seed).uniform(1000, 9000, size=(21, 27))
 
 
-# ---- Nhóm 1: khớp mô hình chung --------------------------------------------------------------
-def test_grid_is_the_team_grid():
-    stat = pytest.importorskip("floodbench.models.stat")  # cần scikit-learn
-    assert GAM_GRID == stat.GAM_GRID
+# ---- Nhóm 1: không trôi kết quả ---------------------------------------------------------------
+def test_grid_is_the_logged_grid():
+    """Lưới 6 cấu hình đã ghi trong nhật ký tinh chỉnh của nhóm (ngân sách bằng mọi mô hình)."""
+    assert GAM_GRID == [(6, 0.1), (6, 1.0), (8, 0.6), (8, 5.0), (12, 1.0), (12, 10.0)]
 
 
-def test_same_predictions_as_team_function_on_synthetic_data():
-    stat = pytest.importorskip("floodbench.models.stat")
-    Y = synthetic_Y()
-    train, test = build_rows(Y, CFG, range(3, 12), 2), build_rows(Y, CFG, [12], 2)
-    np.testing.assert_allclose(gam_forecast(train, test, 2).pred, stat.gam(train, test, 2), rtol=1e-10)
+# Dự báo GAM của mùa 2010 tại 3 gốc đầu tiên, lấy từ benchmark thăm dò của nhóm
+# (results/tables/probe_predictions.csv, trước khi bỏ gói chung). (tầm h) -> [(gốc t, km²)]
+PROBE_2010 = {1: [(3, 6671.6637), (4, 4615.695434), (5, 3769.79497)],
+              2: [(3, 6047.387284), (4, 4436.486652), (5, 3785.364175)],
+              4: [(3, 5479.095268), (4, 4400.177563), (5, 5327.206285)]}
 
 
-def test_reproduces_stored_team_forecasts_for_one_fold():
-    """Fold 2010, tầm 16 ngày trên dữ liệu thật: phải trùng results/tables/probe_predictions.csv."""
+@pytest.mark.parametrize("h", [1, 2, 4])
+def test_matches_probe_benchmark_for_2010(h):
+    cfg, Y = load_data()
+    train = build_rows(Y, cfg, season_index(cfg, range(2003, 2010)), h)
+    test = build_rows(Y, cfg, season_index(cfg, [2010]), h)
+    ours = test.assign(pred=gam_forecast(train, test, h).pred).set_index("t")["pred"]
+    t, expected = zip(*PROBE_2010[h])
+    np.testing.assert_allclose(ours.loc[list(t)].to_numpy(), expected, atol=1e-4)
+
+
+def test_reproduces_saved_predictions_for_one_fold():
+    """Fold 2010, tầm 16 ngày: phải trùng results/GAM/tables/gam_predictions.csv đã lưu."""
     cfg, Y = load_data()
     train = build_rows(Y, cfg, season_index(cfg, range(2003, 2010)), 2)
     test = build_rows(Y, cfg, season_index(cfg, [2010]), 2)
     ours = test.assign(pred=gam_forecast(train, test, 2).pred).set_index("t")["pred"]
-    team = pd.read_csv(TEAM_PREDICTIONS).query("model == 'gam' and h == 2 and season == 2010")
-    np.testing.assert_allclose(ours.loc[team["t"]].to_numpy(), team["pred"].to_numpy(), atol=1e-6)
+    saved = pd.read_csv(TABLES / "gam_predictions.csv").query("model == 'gam' and h == 2 and season == 2010")
+    np.testing.assert_allclose(ours.loc[saved["t"]].to_numpy(), saved["pred"].to_numpy(), atol=1e-6)
 
 
 # ---- Nhóm 2: đáp án biết trước ---------------------------------------------------------------

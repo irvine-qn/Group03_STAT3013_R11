@@ -1,9 +1,9 @@
 # Dữ liệu đầu vào của GAM
 
 Thư mục này **không chứa dữ liệu gốc**. Nguồn duy nhất là bảng Level 1 chung của nhóm:
-`data/processed/mekong/level1_series.csv` (21 mùa × 27 bước, diện tích ngập km² toàn ĐBSCL).
+`data/processed/level1_series.csv` (21 mùa × 27 bước, diện tích ngập km² toàn ĐBSCL).
 
-Hai file ở đây do `python src/GAM/build_dataset.py` sinh ra, **chỉ để xem**:
+Hai file ở đây do `python src/GAM/gam_build_dataset.py` sinh ra, **chỉ để xem**:
 
 | File | Nội dung |
 |---|---|
@@ -21,8 +21,8 @@ Hai file ở đây do `python src/GAM/build_dataset.py` sinh ra, **chỉ để x
 | `a_t`, `a_t1` | Anomaly hôm nay và 8 ngày trước: y − c |
 | `anomaly_target` | Mục tiêu GAM học |
 
-Vì sao bước 2 (`run_model.py`) không đọc `gam_rows.csv`? Trong từng fold, mô hình phải dựng lại
-dòng chỉ từ các mùa trước mùa test (hàm `floodbench.features.build_rows`). Bảng ở đây gộp mọi mùa,
+Vì sao bước 2 (`gam_run_model.py`) không đọc `gam_rows.csv`? Trong từng fold, mô hình phải dựng lại
+dòng chỉ từ các mùa trước mùa test (hàm `build_rows` trong `src/GAM/gam_protocol.py`). Bảng ở đây gộp mọi mùa,
 nên chỉ dùng để mở ra xem dữ liệu trông như thế nào.
 
 Mùa 2000–2002 không có dòng nào: chúng chưa có đủ 3 mùa trước để tính mức bình thường, nên chỉ được
