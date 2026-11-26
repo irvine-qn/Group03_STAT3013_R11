@@ -1,0 +1,4 @@
+model,h,n_seasons,rmse_ratio,wins,mse_diff_pct,mse_diff_pct_ci_low,mse_diff_pct_ci_high,p_t,p_wilcoxon,p_tost,p_t_holm
+chronos2,1,11,1.024,4,7.7421,-1.0148,16.499,0.3026,0.1748,0.2157,0.6051
+chronos2,2,11,1.0266,2,7.2345,-2.3514,16.8204,0.3455,0.1748,0.2108,0.6051
+chronos2,4,11,1.0601,2,14.2783,4.0393,24.5173,0.005,0.0098,0.748,0.0151
