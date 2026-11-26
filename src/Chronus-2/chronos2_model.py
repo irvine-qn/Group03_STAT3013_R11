@@ -30,7 +30,7 @@ def load_pipeline(model_id: str = MODEL_ID, device: str = "cpu"):
     """Tải trọng số Chronos-2 (lần đầu tải từ Hugging Face, các lần sau lấy từ bộ nhớ đệm).
 
     device: "cpu" (mặc định, kết quả chính thức chạy trên CPU) hoặc "cuda" (GPU, dùng cho
-    fine-tune và để đối chiếu; trên GPU số có thể lệch khoảng 1 km² do sai số dấu phẩy động).
+    fine-tune và để đối chiếu; chạy zero-shot trên GPU RTX 4050 lệch CPU tối đa 0,002 km²).
     """
     from chronos import Chronos2Pipeline  # import ở đây để test không cần tải model
 

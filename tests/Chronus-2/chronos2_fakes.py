@@ -20,3 +20,15 @@ class FakePipeline:
         values = self.step_value * torch.arange(1, prediction_length + 1, dtype=torch.float32)
         quantiles = [values.reshape(1, prediction_length, 1)]  # (biến, bước, phân vị)
         return quantiles, [values.reshape(1, prediction_length)]
+
+
+class FakeTrainablePipeline(FakePipeline):
+    """Như FakePipeline nhưng có thêm fit(): ghi lại dữ liệu học, trả về chính nó (không học gì)."""
+
+    def __init__(self, step_value=0.0):
+        super().__init__(step_value)
+        self.fit_calls = []
+
+    def fit(self, inputs, prediction_length, **settings):
+        self.fit_calls.append({"inputs": inputs, "prediction_length": prediction_length, "settings": settings})
+        return self
