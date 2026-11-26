@@ -1,7 +1,7 @@
 """Chẩn đoán LightGBM (phần A2 của docs/lightgbm/thien_lightgbm.md).
 
-Không sửa mô hình của nhóm: module này dùng lại đúng lưới `LGBM_GRID`, đặc trưng, `pick_config`
-và `SEED` của `models/ml.py`, rồi ghi thêm những gì `benchmark` không lưu:
+Không sửa mô hình: module này dùng lại đúng lưới `LGBM_GRID`, đặc trưng, `pick_config`
+và `SEED` của `lightgbm_model.py`, rồi ghi thêm những gì `lightgbm_forecast.py` không lưu:
 
 1. cấu hình được chọn ở từng fold, từng tầm, từng seed;
 2. độ quan trọng đặc trưng (tổng gain) và SHAP trung bình tuyệt đối (TreeSHAP) trên mùa test;
@@ -16,8 +16,8 @@ chọn seed tốt nhất. Chạy từ gốc repo:
 `python src/LightGBM/lightgbm_diag.py [region] [số seed]`,
 `python src/LightGBM/lightgbm_diag.py extras [region]` và
 `python src/LightGBM/lightgbm_diag.py seasons [region]`.
-Kết quả ghi vào `results/LightGBM/{tables,figures}`; `results/tables/probe_predictions.csv`
-(do benchmark chung sinh ra) chỉ được đọc.
+Kết quả ghi vào `results/LightGBM/{tables,figures}`; `results/LightGBM/tables/predictions.csv`
+(do `lightgbm_forecast.py` sinh ra, seed 0) chỉ được đọc.
 """
 # Cho phép dùng chú thích kiểu (type hint) mới (vd. `list[int]`) kể cả trên Python 3.10;
 # các chú thích kiểu không bị tính toán lúc chạy.
@@ -30,28 +30,22 @@ import numpy as np  # mảng số và các phép toán vector hóa
 import pandas as pd  # bảng dữ liệu (DataFrame)
 from sklearn.ensemble import RandomForestRegressor  # Random Forest, dùng ở thí nghiệm đối chứng
 
-# ---- Các thành phần dùng chung của cả nhóm (nằm trong src/floodbench/) ----------------------
-from floodbench.cv import rolling_origin  # sinh các fold: huấn luyện các mùa trước năm Y, test năm Y
-from floodbench.data.regions import load_region, repo_root  # đọc cấu hình vùng; lấy thư mục gốc repo
-from floodbench.evaluation import pooled_rmse  # RMSE gộp tất cả dòng theo nhóm chỉ định
-from floodbench.features import build_rows, to_wide  # dựng bảng đặc trưng; đổi bảng dài thành ma trận
-from floodbench.models.forest import N_TREES, RF_GRID  # số cây và lưới cấu hình của Random Forest nhóm
+# ---- Các thành phần của LightGBM (cùng thư mục src/LightGBM/) --------------------------------
+# REPO_ROOT: thư mục gốc repo; TABLES, FIGURES: results/LightGBM/{tables,figures}
+from lightgbm_data import FIGURES, TABLES, load_config, load_flood_matrix
+from lightgbm_evaluate import pooled_rmse  # RMSE gộp tất cả dòng theo nhóm chỉ định
+from lightgbm_forecast import run as run_models  # chạy một tập mô hình qua 11 mùa test
 # LGBM_GRID: 6 cấu hình (num_leaves, n_estimators, learning_rate); SEED: seed mặc định (0);
-# _raw/_anom/_noclim: hàm dựng ma trận đặc trưng cho 3 biến thể mô hình
-from floodbench.models.ml import LGBM_GRID, SEED, _anom, _noclim, _raw
-from floodbench.models.tuning import pick_config  # chọn cấu hình bằng validation trong tập huấn luyện
-# BASE = "anom_ar1" (mô hình đối chứng); PHASES = các giai đoạn lũ theo ngày trong năm
-from floodbench.report_tables import BASE, PHASES
+# DESIGN/_raw: hàm dựng ma trận đặc trưng; RF_GRID, N_TREES: lưới Random Forest của nhóm;
+# VARIANTS: ba biến thể đã khai báo trước khi chạy test (không được chọn lại sau khi xem điểm test)
+from lightgbm_model import DESIGN, LGBM_GRID, N_TREES, RF_GRID, SEED, VARIANTS, _raw
+# rolling_origin: sinh các fold (huấn luyện các mùa trước năm Y, test năm Y); build_rows: dựng bảng
+# đặc trưng; pick_config: chọn cấu hình bằng validation trong tập huấn luyện; PHASES: giai đoạn lũ;
+# HORIZONS: các tầm theo số bước, 1 bước = 8 ngày nên (1, 2, 4) ứng với 8, 16, 32 ngày
+from lightgbm_protocol import HORIZONS, PHASES, build_rows, clim5, pick_config, rolling_origin
 
-# Kết quả của LightGBM nằm ở results/LightGBM/ (cùng cấp với results/ của các mô hình khác)
-RESULT = repo_root() / "results" / "LightGBM"
-# Nơi ghi các bảng csv và các hình png
-TABLES, FIGURES = RESULT / "tables", RESULT / "figures"
-
-# Các tầm dự báo tính theo số bước; 1 bước = 8 ngày nên (1, 2, 4) ứng với 8, 16, 32 ngày
-HORIZONS = (1, 2, 4)
-# Ba biến thể mô hình đã khai báo trước khi chạy test (không được chọn lại sau khi xem điểm test)
-VARIANTS = ("raw", "anomaly", "noclim")
+# Mô hình đối chứng
+BASE = "anom_ar1"
 # Tên các cột đặc trưng của từng biến thể, đúng thứ tự cột của ma trận đưa vào mô hình
 FEATURES = {
     # y_t, y_t1, y_t2: diện tích ngập hiện tại và 2 bước trước; c_t: climatology tại bước gốc;
@@ -62,22 +56,18 @@ FEATURES = {
     # như raw nhưng bỏ hẳn climatology (ablation: kiểm tra lợi thế có đến từ climatology không)
     "noclim": ["y_t", "y_t1", "y_t2", "doy_target"],
 }
-# Tra cứu: tên biến thể -> hàm dựng ma trận đặc trưng tương ứng
-_DESIGN = {"raw": _raw, "anomaly": _anom, "noclim": _noclim}
-
-
 def design(rows: pd.DataFrame, variant: str) -> np.ndarray:
     # Biến bảng các dòng (rows) thành ma trận đặc trưng theo biến thể `variant`
-    return _DESIGN[variant](rows)
+    return DESIGN[variant](rows)
 
 
 def fit_model(train: pd.DataFrame, cfg, variant: str, seed: int = SEED) -> lgb.LGBMRegressor:
-    """Cùng tham số với models/ml.py; chỉ `random_state` được phép đổi."""
+    """Cùng tham số với lightgbm_model.py; chỉ `random_state` được phép đổi."""
     # Tách bộ ba siêu tham số: số lá tối đa mỗi cây, số cây, tốc độ học
     leaves, n_est, lr = cfg
     # Nhãn huấn luyện: biến thể anomaly dự báo (y_target - climatology đích), biến thể khác dự báo y_target
     y = train["y_target"] - (train["c_target"] if variant == "anomaly" else 0)
-    # Tạo mô hình LightGBM; các tham số cố định phải giống hệt models/ml.py để tái lập đúng benchmark
+    # Tạo mô hình LightGBM; các tham số cố định phải giống hệt lightgbm_model.py để tái lập đúng benchmark
     model = lgb.LGBMRegressor(num_leaves=leaves, n_estimators=n_est, learning_rate=lr,
                               # min_child_samples=10: mỗi lá cần >= 10 dòng (chống học thuộc)
                               # subsample=0.8, subsample_freq=1: mỗi cây dùng ngẫu nhiên 80% dòng (bagging)
@@ -127,14 +117,12 @@ def importance_of(model: lgb.LGBMRegressor, test: pd.DataFrame, variant: str) ->
                          "mean_abs_shap": np.abs(contrib).mean(axis=0)})
 
 
-def run_fold(Y: np.ndarray, cfg, fold, h: int, variants=VARIANTS, seeds=(SEED,)):
+def run_fold(Y: np.ndarray, config: dict, fold, h: int, variants=VARIANTS, seeds=(SEED,)):
     """Một (fold, tầm): trả về (cấu hình đã chọn, độ quan trọng, dự báo) cho mọi biến thể và seed."""
-    # Đổi danh sách năm (vd. 2005) thành chỉ số hàng trong ma trận Y (năm - năm đầu tiên)
-    idx = lambda seasons: [s - cfg.first_year for s in seasons]
     # Bảng đặc trưng của các mùa huấn luyện (mỗi dòng = một gốc dự báo, nhãn y_target ở bước t + h)
-    train = build_rows(Y, cfg, idx(fold.train_seasons), h)
+    train = build_rows(Y, config, fold.train_seasons, h)
     # Bảng đặc trưng của đúng một mùa test
-    test = build_rows(Y, cfg, idx([fold.test_season]), h)
+    test = build_rows(Y, config, [fold.test_season], h)
     # Ba danh sách gom kết quả: cấu hình đã chọn, độ quan trọng đặc trưng, dự báo
     cfg_rows, imp_rows, pred_rows = [], [], []
     # Duyệt từng biến thể mô hình
@@ -168,17 +156,17 @@ def run_fold(Y: np.ndarray, cfg, fold, h: int, variants=VARIANTS, seeds=(SEED,))
 
 def run(region: str = "mekong", seeds=range(10), variants=VARIANTS):
     # Đọc cấu hình của vùng (năm đầu/cuối, số bước, đường dẫn dữ liệu...)
-    cfg = load_region(region)
+    config = load_config(region)
     # Đọc dữ liệu đã tổng hợp thành chuỗi diện tích ngập, đổi thành ma trận (mùa x bước)
-    Y = to_wide(pd.read_csv(cfg.path("processed_level1")), cfg)
+    Y = load_flood_matrix(config)
     # Danh sách gom kết quả của từng fold
     cfgs, imps, preds = [], [], []
     # Rolling origin: mỗi fold huấn luyện các mùa trước năm test rồi kiểm tra năm test (2010–2020: 11 fold)
-    for fold in rolling_origin(cfg):
+    for fold in rolling_origin(config):
         # Chạy từng tầm dự báo (8, 16, 32 ngày)
         for h in HORIZONS:
             # Chạy toàn bộ biến thể và seed ở (fold, tầm) này
-            c, i, p = run_fold(Y, cfg, fold, h, variants, tuple(seeds))
+            c, i, p = run_fold(Y, config, fold, h, variants, tuple(seeds))
             # Thêm kết quả vào danh sách (dấu phẩy tạo tuple chỉ để gọi cả ba lệnh append trên một dòng)
             cfgs.append(c), imps.append(i), preds.append(p)
         # Báo tiến độ; flush=True để hiện ngay lên màn hình
@@ -317,15 +305,13 @@ def permutation_importance(model, test: pd.DataFrame, variant: str, n_repeats: i
     return pd.DataFrame(rows)
 
 
-def permutation_fold(Y: np.ndarray, cfg, fold, h: int, variants=VARIANTS, seed: int = SEED,
+def permutation_fold(Y: np.ndarray, config: dict, fold, h: int, variants=VARIANTS, seed: int = SEED,
                      n_repeats: int = 30) -> pd.DataFrame:
     """Permutation importance của mô hình mà benchmark chọn (cấu hình chọn bằng validation) ở một fold."""
-    # Đổi năm thành chỉ số hàng trong Y (giống run_fold)
-    idx = lambda seasons: [s - cfg.first_year for s in seasons]
     # Bảng đặc trưng của các mùa huấn luyện
-    train = build_rows(Y, cfg, idx(fold.train_seasons), h)
+    train = build_rows(Y, config, fold.train_seasons, h)
     # Bảng đặc trưng của mùa test
-    test = build_rows(Y, cfg, idx([fold.test_season]), h)
+    test = build_rows(Y, config, [fold.test_season], h)
     # Danh sách gom kết quả của từng biến thể
     out = []
     # Với từng biến thể mô hình
@@ -409,20 +395,18 @@ def fixed_config_models() -> dict:
     return m
 
 
-def fixed_config_table(Y: np.ndarray, cfg, h: int = 2) -> pd.DataFrame:
+def fixed_config_table(Y: np.ndarray, config: dict, h: int = 2) -> pd.DataFrame:
     """Chạy mọi mô hình cố định qua các fold rolling-origin, gộp dự báo rồi tính phase_metrics."""
     # Tất cả mô hình cố định cần thử
     models = fixed_config_models()
-    # Đổi năm thành chỉ số hàng trong Y
-    idx = lambda seasons: [s - cfg.first_year for s in seasons]
     # Mỗi mô hình có một danh sách chứa dự báo của các fold
     preds = {k: [] for k in models}
     # Duyệt từng fold rolling-origin
-    for fold in rolling_origin(cfg):
+    for fold in rolling_origin(config):
         # Đặc trưng của các mùa huấn luyện
-        train = build_rows(Y, cfg, idx(fold.train_seasons), h)
+        train = build_rows(Y, config, fold.train_seasons, h)
         # Đặc trưng của mùa test
-        test = build_rows(Y, cfg, idx([fold.test_season]), h)
+        test = build_rows(Y, config, [fold.test_season], h)
         # Với từng mô hình: nhãn và (họ, hàm khớp)
         for label, (_, fit) in models.items():
             # Khớp trên tập huấn luyện, dự báo mùa test, lưu kèm mùa, ngày đích và giá trị thực
@@ -599,16 +583,22 @@ def make_figures(tables: dict, out_dir) -> list:
     return saved
 
 
+def load_official() -> pd.DataFrame:
+    """Dự báo chính thức (seed 0) của lightgbm_forecast.py; báo lỗi rõ ràng nếu chưa chạy."""
+    path = TABLES / "predictions.csv"
+    if not path.exists():
+        raise FileNotFoundError(f"không thấy {path}; hãy chạy lightgbm_forecast.py trước")
+    return pd.read_csv(path)
+
+
 def main(region: str = "mekong", n_seeds: int = 10) -> None:
     # Đảm bảo thư mục ghi bảng tồn tại
     TABLES.mkdir(parents=True, exist_ok=True)
     # Chạy toàn bộ rolling-origin với n_seeds seed: ra bảng cấu hình, độ quan trọng, dự báo
     cfgs, imps, preds = run(region, seeds=range(n_seeds))
-    # Đọc dự báo chính thức của benchmark chung (chỉ đọc, không ghi)
-    official = pd.read_csv(repo_root() / "results" / "tables" / "probe_predictions.csv")
-    # Bỏ các mô hình có hậu tố _w7 (bản cửa sổ huấn luyện 7 mùa, không phải bản chính)
-    official = official[~official["model"].str.endswith("_w7")]
-    # RMSE của AnomAR1 theo tầm, từ bản benchmark chính thức
+    # Đọc dự báo chính thức (chỉ đọc, không ghi)
+    official = load_official()
+    # RMSE của AnomAR1 theo tầm, từ bản chính thức
     base_rmse = pooled_rmse(official[official["model"] == BASE], by=("model", "h"))
     # Đổi thành từ điển {(tên mô hình LightGBM, tầm): RMSE AnomAR1}; AnomAR1 dùng chung cho cả 3 biến thể
     base = {(m, h): float(r) for m in (f"lgbm_{v}" for v in VARIANTS)
@@ -642,10 +632,10 @@ def main_extras(region: str = "mekong") -> None:
     # Đảm bảo thư mục ghi bảng tồn tại
     TABLES.mkdir(parents=True, exist_ok=True)
     # Đọc cấu hình vùng và dữ liệu, dựng ma trận (mùa x bước) như hàm run
-    cfg = load_region(region)
-    Y = to_wide(pd.read_csv(cfg.path("processed_level1")), cfg)
+    config = load_config(region)
+    Y = load_flood_matrix(config)
     # Permutation importance cho mọi (fold, tầm), gộp thành một bảng
-    perm = pd.concat([permutation_fold(Y, cfg, fold, h) for fold in rolling_origin(cfg) for h in HORIZONS],
+    perm = pd.concat([permutation_fold(Y, config, fold, h) for fold in rolling_origin(config) for h in HORIZONS],
                      ignore_index=True)
     # Ghi bảng chi tiết theo từng fold
     perm.round(4).to_csv(TABLES / "lightgbm_permutation_importance.csv", index=False)
@@ -656,7 +646,7 @@ def main_extras(region: str = "mekong") -> None:
     print("Permutation importance (nhóm, tăng RMSE km² qua 11 mùa test):\n",
           summ[summ["kind"] == "group"].to_string(index=False))
     # Thí nghiệm đối chứng: LightGBM và Random Forest với cấu hình cố định ở tầm 16 ngày
-    fixed = fixed_config_table(Y, cfg, h=2).round(1)
+    fixed = fixed_config_table(Y, config, h=2).round(1)
     fixed.to_csv(TABLES / "lightgbm_vs_rf_fixed_configs_h2.csv", index=False)
     print("\nCấu hình cố định, cùng đặc trưng raw, h = 2 (chỉ để mô tả):\n", fixed.to_string(index=False))
 
@@ -669,9 +659,10 @@ def main_seasons(region: str = "mekong", seasons=(2011, 2015)) -> None:
     """
     # Đảm bảo thư mục ghi bảng tồn tại
     TABLES.mkdir(parents=True, exist_ok=True)
-    # Đọc dự báo chính thức của benchmark rồi bỏ các mô hình cửa sổ 7 mùa (_w7), như hàm main
-    official = pd.read_csv(repo_root() / "results" / "tables" / "probe_predictions.csv")
-    official = official[~official["model"].str.endswith("_w7")]
+    # Đọc dự báo chính thức, thêm mốc Clim5 (chỉ để vẽ, không nằm trong bảng chính thức)
+    config = load_config(region)
+    official = pd.concat([load_official(), run_models(load_flood_matrix(config), config, {"clim5": clim5})],
+                         ignore_index=True)
     # Đỉnh lũ quan sát của từng mùa: lấy giá trị thực lớn nhất (các mô hình đều chứa cùng y_target nên dùng clim5)
     peaks = official[official["model"] == "clim5"].groupby("season")["y_target"].max().to_dict()
     # Bảng RMSE theo (mùa, tầm) của lgbm_raw so với AnomAR1, kèm đỉnh lũ và hạng đỉnh

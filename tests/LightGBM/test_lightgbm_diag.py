@@ -3,17 +3,16 @@ import numpy as np  # mảng số
 import pandas as pd  # bảng dữ liệu
 import pytest  # khung chạy test; dùng thêm pytest.approx và parametrize
 
-from floodbench.cv import rolling_origin  # sinh các fold rolling-origin
-from floodbench.data.regions import load_region  # đọc cấu hình vùng
-from floodbench.features import build_rows  # dựng bảng đặc trưng
+from lightgbm_data import load_config  # đọc cấu hình vùng
+from lightgbm_protocol import build_rows, rolling_origin  # dựng bảng đặc trưng; sinh các fold rolling-origin
 # Các hàm cần kiểm tra, nhập từ lightgbm_diag.py (đường dẫn thêm trong conftest.py)
 from lightgbm_diag import (FEATURES, choose_config, fit_model, gain_concentration,
                            importance_of, run_fold, seed_summary, season_phase_table)
-# Mô hình chính thức của nhóm trong benchmark, dùng để đối chiếu với mã chẩn đoán
-from floodbench.models.ml import LGBM_GRID, SEED, lgbm_anomaly, lgbm_noclim, lgbm_raw
+# Mô hình chính thức (lightgbm_model.py), dùng để đối chiếu với mã chẩn đoán
+from lightgbm_model import LGBM_GRID, SEED, lgbm_anomaly, lgbm_noclim, lgbm_raw
 
 # Cấu hình vùng Mekong, đọc một lần dùng cho mọi test
-CFG = load_region("mekong")
+CFG = load_config("mekong")
 # Từ điển: tên biến thể -> mô hình benchmark tương ứng
 BENCHMARK = {"raw": lgbm_raw, "anomaly": lgbm_anomaly, "noclim": lgbm_noclim}
 
@@ -42,12 +41,10 @@ def one_fold(h=2, test=2012):
     Y = synthetic_Y()
     # Lấy đúng một fold, với mùa test là `test` (first_test = last_test)
     fold = next(iter(rolling_origin(CFG, first_test=test, last_test=test)))
-    # Đổi năm thành chỉ số hàng trong Y
-    idx = lambda ss: [s - CFG.first_year for s in ss]
     # Bảng đặc trưng của các mùa huấn luyện
-    train = build_rows(Y, CFG, idx(fold.train_seasons), h)
+    train = build_rows(Y, CFG, fold.train_seasons, h)
     # Trả về: ma trận Y, fold, bảng huấn luyện và bảng test
-    return Y, fold, train, build_rows(Y, CFG, idx([fold.test_season]), h)
+    return Y, fold, train, build_rows(Y, CFG, [fold.test_season], h)
 
 
 # Chạy test này 3 lần, mỗi lần với một biến thể
