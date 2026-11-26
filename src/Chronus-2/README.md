@@ -2,6 +2,7 @@
 
 > **Bắt đầu từ [`notebooks/Chronus-2/chronos2_overview.ipynb`](../../notebooks/Chronus-2/chronos2_overview.ipynb)**:
 > notebook đi qua từng bước bằng hàm thật và chỉ sang file chi tiết bên dưới.
+> Bản tiếng Anh: [`chronos2_overview_en.ipynb`](../../notebooks/Chronus-2/chronos2_overview_en.ipynb).
 
 ## 1. Chronos-2 là gì
 
