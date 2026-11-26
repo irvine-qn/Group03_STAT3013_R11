@@ -1,0 +1,17 @@
+# Giao diện lấy từ video Remotion "flood" (src/projects/flood/theme.ts):
+# trắng #ffffff, xanh trời rất nhạt #eaf6fd, đen #111111, xám phụ #6b7280, kẻ #d9dde3,
+# xanh trời đậm #3fa9e8 chỉ để nhấn. Font: Inter (chữ), Space Grotesk (tiêu đề), JetBrains Mono (số).
+# Font Google được nạp bằng khối <style> trong app/streamlit_app.py.
+[theme]
+base = "light"
+primaryColor = "#3fa9e8"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#eaf6fd"
+textColor = "#111111"
+linkColor = "#3fa9e8"
+borderColor = "#d9dde3"
+dataframeBorderColor = "#d9dde3"
+font = "Inter, sans-serif"
+headingFont = "Space Grotesk, sans-serif"
+codeFont = "JetBrains Mono, monospace"
+baseRadius = "none"

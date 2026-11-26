@@ -25,6 +25,55 @@ SIZES = ["small", "medium", "large"]
 
 st.set_page_config(page_title="Dự báo diện tích ngập ĐBSCL", layout="wide")
 
+# --- Giao diện: lấy từ video Remotion "flood" (src/projects/flood/theme.ts). Chỉ đổi màu, font, nét. ---
+PAPER, WASH, INK, MUTED, RULE = "#ffffff", "#eaf6fd", "#111111", "#6b7280", "#d9dde3"
+SKY_LIGHT, SKY_MID, SKY_DEEP, BASE_GREY = "#cfeafb", "#8fd0f5", "#3fa9e8", "#b4bac3"
+FONT_BODY, FONT_DISPLAY, FONT_MONO = "Inter", "Space Grotesk", "JetBrains Mono"
+
+
+@alt.theme.register("flood", enable=True)
+def _flood_theme() -> alt.theme.ThemeConfig:
+    """Trục và lưới như SeasonAxes/RmseByHorizon: kẻ xám nhạt, nhãn mono xám, chỉ trắng/đen/xanh trời.
+    Đường quan sát vẽ màu đen nên dãy màu bắt đầu bằng xanh trời đậm, đen để sau cùng."""
+    axis = {
+        "domainColor": INK, "domainWidth": 1.5, "grid": True, "gridColor": RULE, "gridWidth": 1,
+        "tickColor": RULE, "labelColor": MUTED, "labelFont": FONT_MONO, "labelFontSize": 12,
+        "titleColor": MUTED, "titleFont": FONT_MONO, "titleFontSize": 12, "titleFontWeight": 400,
+    }
+    return {
+        "config": {
+            "background": PAPER,
+            "font": FONT_BODY,
+            "view": {"stroke": None},
+            "range": {"category": [SKY_DEEP, SKY_MID, MUTED, BASE_GREY, INK, SKY_LIGHT]},
+            "axis": axis,
+            "axisX": {"grid": False},
+            "legend": {"labelColor": INK, "labelFont": FONT_MONO, "labelFontSize": 12,
+                       "titleColor": MUTED, "titleFont": FONT_MONO, "titleFontWeight": 400},
+            "title": {"color": INK, "font": FONT_DISPLAY, "fontWeight": 700},
+            "line": {"strokeWidth": 2.5},
+            "bar": {"cornerRadius": 0},
+            "point": {"color": INK, "strokeWidth": 2},
+            "rule": {"color": INK, "strokeWidth": 2},
+        }
+    }
+
+
+st.markdown(f"""<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@500;700&display=swap&subset=vietnamese');
+h1, h2, h3 {{ font-family: '{FONT_DISPLAY}', sans-serif !important; letter-spacing: -0.03em; color: {INK}; }}
+h1 {{ font-weight: 700 !important; }}
+[data-testid="stCaptionContainer"] {{ font-family: '{FONT_MONO}', monospace; color: {MUTED}; }}
+[data-testid="stMetric"] {{ border: 3px solid {INK}; background: {PAPER}; padding: 14px 18px; }}
+[data-testid="stMetricLabel"] {{ font-family: '{FONT_MONO}', monospace; color: {MUTED}; }}
+[data-testid="stMetricValue"] {{ font-family: '{FONT_MONO}', monospace; font-weight: 700; letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums; color: {INK}; }}
+.stTabs [data-baseweb="tab"] p {{ font-family: '{FONT_MONO}', monospace; text-transform: uppercase;
+    letter-spacing: 0.08em; font-size: 0.85rem; }}
+.stTabs [aria-selected="true"] p {{ color: {INK}; font-weight: 700; }}
+.stTabs [data-baseweb="tab-highlight"] {{ background-color: {INK}; height: 3px; }}
+</style>""", unsafe_allow_html=True)
+
 
 def label(model: str) -> str:
     return LABELS.get(model, model)
@@ -113,13 +162,13 @@ with tab_data:
     st.altair_chart(alt.Chart(sub).mark_line().encode(
         x=alt.X("doy:Q", title="Ngày trong năm"), y=alt.Y("target_km2:Q", title="Diện tích ngập (km²)"),
         color="season:N", tooltip=["season", "doy", "target_km2", "imputed", "duplicate"]).properties(height=360),
-        use_container_width=True)
+        use_container_width=True, theme=None)
     st.caption("2 ảnh nội suy (2013 ngày 233, 2019 ngày 257) được gắn cờ imputed, không bị xóa.")
 
 with tab_rmse:
     show_all = st.checkbox("Hiện cả các biến thể và mốc đơn giản", value=False)
     models = list(R.index) if show_all else MAIN_MODELS
-    st.altair_chart(bar(rmse_long(R, models), "h"), use_container_width=True)
+    st.altair_chart(bar(rmse_long(R, models), "h"), use_container_width=True, theme=None)
     st.dataframe(R.loc[models].rename(index=label, columns=lambda h: f"{HORIZON_DAYS[int(h)]} ngày")
                  .style.format("{:,.0f}"), use_container_width=True)
 
@@ -139,7 +188,7 @@ with tab_test:
                                 x2="mse_diff_pct_ci_high:Q")
         + base.mark_point(filled=True, size=70).encode(y=alt.Y("model:N", sort=None), x="mse_diff_pct:Q")
         + alt.Chart(pd.DataFrame({"x": [0]})).mark_rule(strokeDash=[4, 4]).encode(x="x:Q"),
-        use_container_width=True)
+        use_container_width=True, theme=None)
 
 with tab_cond:
     horizon_c = st.radio("Tầm", list(HORIZON_DAYS), index=1, horizontal=True, key="cond_h",
@@ -147,9 +196,9 @@ with tab_cond:
     main_pred = P[(P["h"] == horizon_c) & P["model"].isin(MAIN_MODELS)]
     main_pred = main_pred.assign(model=pd.Categorical(main_pred["model"], MAIN_MODELS)).sort_values("model")
     st.subheader("Giai đoạn lũ")
-    st.altair_chart(bar(condition_rmse(main_pred, "phase").astype({"model": str}), "phase"), use_container_width=True)
+    st.altair_chart(bar(condition_rmse(main_pred, "phase").astype({"model": str}), "phase"), use_container_width=True, theme=None)
     st.subheader("Cỡ lũ của mùa test")
-    st.altair_chart(bar(condition_rmse(main_pred, "size").astype({"model": str}), "size"), use_container_width=True)
+    st.altair_chart(bar(condition_rmse(main_pred, "size").astype({"model": str}), "size"), use_container_width=True, theme=None)
     st.caption("Giai đoạn theo ngày đích: nước lên < 257, đỉnh 257–297, nước rút ≥ 298. "
                "Cỡ lũ: chia 11 mùa test thành 3 nhóm theo đỉnh diện tích ngập.")
 
@@ -163,5 +212,5 @@ with tab_pred:
     lines = alt.Chart(sub.assign(model=sub.model.map(label))).mark_line().encode(
         x=alt.X("doy_target:Q", title="Ngày được dự báo"), y=alt.Y("pred:Q", title="km²"), color="model:N")
     truth = alt.Chart(obs).mark_line(color="black", strokeWidth=3).encode(x="doy_target:Q", y="y_target:Q")
-    st.altair_chart((truth + lines).properties(height=380), use_container_width=True)
+    st.altair_chart((truth + lines).properties(height=380), use_container_width=True, theme=None)
     st.caption("Đường đen = giá trị quan sát. Mỗi điểm là dự báo thực hiện trước đó 8/16/32 ngày.")
