@@ -1,4 +1,4 @@
-"""Chẩn đoán LightGBM (phần A2 của reports/members/thien_lightgbm.md).
+"""Chẩn đoán LightGBM (phần A2 của docs/lightgbm/thien_lightgbm.md).
 
 Không sửa mô hình của nhóm: module này dùng lại đúng lưới `LGBM_GRID`, đặc trưng, `pick_config`
 và `SEED` của `models/ml.py`, rồi ghi thêm những gì `benchmark` không lưu:
