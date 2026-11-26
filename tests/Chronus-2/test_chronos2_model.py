@@ -3,7 +3,7 @@ import numpy as np
 import torch
 
 from chronos2_fakes import FakePipeline
-from chronos2_model import Chronos2ZeroShot, build_anomaly_context
+from chronos2_model import Chronos2ZeroShot, build_anomaly_context, load_pipeline
 from chronos2_data import load_config, load_flood_matrix
 from chronos2_protocol import climatology
 
@@ -34,3 +34,15 @@ def test_context_passed_as_float32_tensor():
     assert isinstance(series, torch.Tensor)
     assert series.dtype == torch.float32
     assert series.ndim == 1
+
+
+def test_load_pipeline_passes_device(monkeypatch):
+    """load_pipeline phải chuyển đúng thiết bị (cpu/cuda) cho Chronos2Pipeline, mặc định là cpu."""
+    import chronos
+
+    received = []
+    monkeypatch.setattr(chronos.Chronos2Pipeline, "from_pretrained",
+                        lambda model_id, device_map: received.append((model_id, device_map)))
+    load_pipeline()
+    load_pipeline(device="cuda")
+    assert received == [("amazon/chronos-2", "cpu"), ("amazon/chronos-2", "cuda")]

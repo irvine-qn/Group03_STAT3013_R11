@@ -26,11 +26,15 @@ def build_anomaly_context(Y: np.ndarray, season_idx: int, origin: int) -> np.nda
     return Y[season_idx, :origin] - c[:origin]
 
 
-def load_pipeline(model_id: str = MODEL_ID):
-    """Tải trọng số Chronos-2 (lần đầu tải từ Hugging Face, các lần sau lấy từ bộ nhớ đệm)."""
+def load_pipeline(model_id: str = MODEL_ID, device: str = "cpu"):
+    """Tải trọng số Chronos-2 (lần đầu tải từ Hugging Face, các lần sau lấy từ bộ nhớ đệm).
+
+    device: "cpu" (mặc định, kết quả chính thức chạy trên CPU) hoặc "cuda" (GPU, dùng cho
+    fine-tune và để đối chiếu; trên GPU số có thể lệch khoảng 1 km² do sai số dấu phẩy động).
+    """
     from chronos import Chronos2Pipeline  # import ở đây để test không cần tải model
 
-    return Chronos2Pipeline.from_pretrained(model_id, device_map="cpu")
+    return Chronos2Pipeline.from_pretrained(model_id, device_map=device)
 
 
 class Chronos2ZeroShot:
