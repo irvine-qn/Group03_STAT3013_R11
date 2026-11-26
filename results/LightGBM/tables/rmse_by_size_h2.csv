@@ -1,0 +1,5 @@
+model,small,medium,large
+anom_ar1,1488.0,1367.0,1260.0
+lgbm_raw,1261.0,1269.0,1318.0
+lgbm_anomaly,1457.0,1366.0,1263.0
+lgbm_noclim,1437.0,1252.0,1189.0
