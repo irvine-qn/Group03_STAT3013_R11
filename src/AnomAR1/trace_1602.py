@@ -1,7 +1,7 @@
 """
 Bước 6
 - truy nguyên chênh lệch AnomAR1 32 ngày: mean/nearest x bước gốc đầu tiên (t = 3 hoặc 1).
-- Chạy: python src/anomAR1/process/trace_1602.py
+- Chạy: python src/AnomAR1/process/trace_1602.py
 """
 
 from pathlib import Path

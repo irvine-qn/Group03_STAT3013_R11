@@ -1,7 +1,7 @@
 """Bước 1 – Sinh dự báo Chronos-2 và mốc AnomAR1 cho 11 mùa test (rolling origin theo năm).
 
-Chạy:  python src/Chronus-2/chronos2_forecast.py
-Kết quả: results/Chronus-2/tables/predictions.csv, mỗi dòng là một dự báo:
+Chạy:  python src/Chronos-2/chronos2_forecast.py
+Kết quả: results/Chronos-2/tables/predictions.csv, mỗi dòng là một dự báo:
     season, t, doy_target, y_target, model, h, pred
 (cùng cột với bảng chung của nhóm để ghép được). Bước 2 là chronos2_evaluate.py.
 
@@ -26,7 +26,7 @@ from chronos2_protocol import (
     training_seasons,
 )
 
-PREDICTIONS_PATH = REPO_ROOT / "results" / "Chronus-2" / "tables" / "predictions.csv"
+PREDICTIONS_PATH = REPO_ROOT / "results" / "Chronos-2" / "tables" / "predictions.csv"
 COLUMNS = ["season", "t", "doy_target", "y_target", "model", "h", "pred"]
 
 

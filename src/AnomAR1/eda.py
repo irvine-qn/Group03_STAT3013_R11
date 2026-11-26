@@ -1,7 +1,7 @@
 """
 Bước: 5
 - thống kê mô tả và suy diễn.
-- Lệnh: python src/anomAR1/process/eda.py
+- Lệnh: python src/AnomAR1/process/eda.py
 Note: nếu chạy khôgn theo thứ tự các bước thì phải đảm bảo file này chạy sau file level3.py nhen :v
 """
 

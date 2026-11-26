@@ -1,4 +1,4 @@
-"""Chạy: pytest src/anomAR1/test"""
+"""Chạy: pytest src/AnomAR1/test"""
 
 import sys
 from pathlib import Path

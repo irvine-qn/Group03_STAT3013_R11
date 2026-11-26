@@ -1,7 +1,7 @@
 """
 Bước thực hiện: 3
 - tạo bảng level 3 (mỗi mùa/dòng)
-- chạy lệnh: python src/anomAR1/process/level3.py
+- chạy lệnh: python src/AnomAR1/process/level3.py
 """
 
 from pathlib import Path

@@ -1,7 +1,7 @@
 """
 Bước: 4
 - dựa vào file predictions.csv để phân tích
-- lệnh: python src/anomAR1/process/analysis.py
+- lệnh: python src/AnomAR1/process/analysis.py
 """
 
 from pathlib import Path

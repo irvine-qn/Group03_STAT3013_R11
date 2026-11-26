@@ -1,8 +1,8 @@
 # Chronos-2 zero-shot
 
-> **Bắt đầu từ [`notebooks/Chronus-2/chronos2_overview.ipynb`](../../notebooks/Chronus-2/chronos2_overview.ipynb)**:
+> **Bắt đầu từ [`notebooks/Chronos-2/chronos2_overview.ipynb`](../../notebooks/Chronos-2/chronos2_overview.ipynb)**:
 > notebook đi qua từng bước bằng hàm thật và chỉ sang file chi tiết bên dưới.
-> Bản tiếng Anh: [`chronos2_overview_en.ipynb`](../../notebooks/Chronus-2/chronos2_overview_en.ipynb).
+> Bản tiếng Anh: [`chronos2_overview_en.ipynb`](../../notebooks/Chronos-2/chronos2_overview_en.ipynb).
 
 ## 1. Chronos-2 là gì
 
@@ -47,10 +47,10 @@ cách nhau khoảng 150 ngày khô nên không nối thành một chuỗi liền
 uv venv .venv --python 3.12
 uv pip install --python .venv\Scripts\python.exe -r requirements.txt
 
-.venv\Scripts\python.exe src/Chronus-2/chronos2_forecast.py        # bước 1, lần đầu tải trọng số model từ Hugging Face
-.venv\Scripts\python.exe src/Chronus-2/chronos2_evaluate.py        # bước 2
-.venv\Scripts\python.exe src/Chronus-2/chronos2_finetune_check.py  # kiểm tra phụ, cần GPU (mục 7)
-.venv\Scripts\python.exe -m pytest tests/Chronus-2                 # dùng pipeline giả, không cần model
+.venv\Scripts\python.exe src/Chronos-2/chronos2_forecast.py        # bước 1, lần đầu tải trọng số model từ Hugging Face
+.venv\Scripts\python.exe src/Chronos-2/chronos2_evaluate.py        # bước 2
+.venv\Scripts\python.exe src/Chronos-2/chronos2_finetune_check.py  # kiểm tra phụ, cần GPU (mục 7)
+.venv\Scripts\python.exe -m pytest tests/Chronos-2                 # dùng pipeline giả, không cần model
 ```
 
 Kiểm tra lại kết quả:
@@ -61,14 +61,14 @@ Kiểm tra lại kết quả:
 
 ## 5. Kết quả (11 mùa test 2010–2020)
 
-RMSE gộp, km² (`results/Chronus-2/tables/rmse.csv`):
+RMSE gộp, km² (`results/Chronos-2/tables/rmse.csv`):
 
 | Mô hình | 8 ngày | 16 ngày | 32 ngày |
 |---|--:|--:|--:|
 | AnomAR1 | 1090 | 1375 | 1687 |
 | Chronos-2 | 1116 | 1412 | 1788 |
 
-So với AnomAR1 ở cấp mùa, n = 11 (`results/Chronus-2/tables/vs_anom_ar1.csv`):
+So với AnomAR1 ở cấp mùa, n = 11 (`results/Chronos-2/tables/vs_anom_ar1.csv`):
 
 | Tầm | Tỉ lệ RMSE | Mùa thắng | Chênh MSE (CI 95%) | p t | p Wilcoxon | p TOST ±5% | p Holm |
 |---|--:|--:|--:|--:|--:|--:|--:|
@@ -92,7 +92,7 @@ Theo vị trí gốc dự báo trong mùa (`rmse_by_season_part.csv`). **Bảng 
 | 16 ngày | 1285 / 1311 | 1661 / 1726 |
 | 32 ngày | 1687 / 1703 | 1689 / **2236** |
 
-Hình: `results/Chronus-2/figures/rmse_by_horizon.png`, `rmse_by_origin.png`, `example_seasons.png`.
+Hình: `results/Chronos-2/figures/rmse_by_horizon.png`, `rmse_by_origin.png`, `example_seasons.png`.
 
 ## 6. Đọc kết quả
 
@@ -113,7 +113,7 @@ Hình: `results/Chronus-2/figures/rmse_by_horizon.png`, `rmse_by_origin.png`, `e
 của các mùa trước nó (2003..Y−1), rồi dự báo như bản zero-shot. Hai cách: `full` (sửa mọi trọng số,
 50 bước, learning rate 1e-6) và `lora` (chỉ học thêm vài ma trận nhỏ, 50 bước, learning rate 1e-5).
 
-RMSE gộp, km² (`results/Chronus-2/tables/finetune_check.csv`):
+RMSE gộp, km² (`results/Chronos-2/tables/finetune_check.csv`):
 
 | Mô hình | 8 ngày | 16 ngày | 32 ngày | 32 ngày, gốc t ≤ 20 | 32 ngày, gốc t ≥ 21 |
 |---|--:|--:|--:|--:|--:|
@@ -157,7 +157,7 @@ Không. Trọng số giữ nguyên; dữ liệu ĐBSCL chỉ dùng để tính c
 
 **Có rò rỉ dữ liệu tương lai không?**
 Không: climatology chỉ dùng 5 mùa trước, ngữ cảnh chỉ có bước 1..t. Có test cố ý đổi dữ liệu tương lai
-thành 1e9 và kiểm tra kết quả không đổi (`tests/Chronus-2/test_chronos2_protocol.py`, `test_chronos2_model.py`).
+thành 1e9 và kiểm tra kết quả không đổi (`tests/Chronos-2/test_chronos2_protocol.py`, `test_chronos2_model.py`).
 
 **Vì sao kiểm định theo mùa (n = 11) mà không dùng hơn 700 dự báo?**
 Sai số các bước trong một mùa tương quan rất mạnh, coi chúng độc lập sẽ thổi phồng ý nghĩa. Mùa là đơn vị độc lập hợp lý.

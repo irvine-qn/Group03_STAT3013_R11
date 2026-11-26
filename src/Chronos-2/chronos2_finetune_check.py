@@ -1,8 +1,8 @@
 """Kiểm tra phụ (THĂM DÒ) – fine-tune có giúp Chronos-2 bắt kịp AnomAR1 không?
 
-Chạy (cần GPU, sau chronos2_forecast.py):  python src/Chronus-2/chronos2_finetune_check.py
-Ghi:  results/Chronus-2/tables/finetune_check_predictions.csv  (dự báo của 2 bản fine-tune)
-      results/Chronus-2/tables/finetune_check.csv              (RMSE so với AnomAR1 và zero-shot)
+Chạy (cần GPU, sau chronos2_forecast.py):  python src/Chronos-2/chronos2_finetune_check.py
+Ghi:  results/Chronos-2/tables/finetune_check_predictions.csv  (dự báo của 2 bản fine-tune)
+      results/Chronos-2/tables/finetune_check.csv              (RMSE so với AnomAR1 và zero-shot)
 
 Cách làm: với mỗi mùa test Y, sao chép Chronos-2 rồi fine-tune trên anomaly của các mùa học
 2003..Y−1 (mỗi mùa là một chuỗi 27 bước), sau đó dự báo mùa Y đúng như bản zero-shot.

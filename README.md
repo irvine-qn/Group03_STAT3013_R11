@@ -47,13 +47,13 @@ Group03_STAT3013_R11/
 ├── docs/                     # Project documentation
 ├── notebooks/                # Exploratory notebooks (nếu chốt chạy streamlit thì sẽ không cần notebook)
 ├── results/                  # Model outputs, one folder per model
-│   ├── anomAR1/
-│   ├── Chronus-2/
+│   ├── AnomAR1/
+│   ├── Chronos-2/
 │   ├── GAM/
 │   └── LightGBM/
 ├── src/                      # Model source code, one folder per model
-│   ├── anomAR1/
-│   ├── Chronus-2/
+│   ├── AnomAR1/
+│   ├── Chronos-2/
 │   ├── GAM/
 │   └── LightGBM/
 ├── tests/                    # Bộ test chung, đối với test riêng thì cập nhật vào thư mục test lớn, test riêng của model thì ở thư mục con của nó

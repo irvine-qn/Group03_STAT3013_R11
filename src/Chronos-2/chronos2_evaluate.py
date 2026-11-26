@@ -1,15 +1,15 @@
 """Bước 2 – Đánh giá Chronos-2 so với mốc AnomAR1, sinh bảng và hình.
 
-Chạy (sau chronos2_forecast.py):  python src/Chronus-2/chronos2_evaluate.py
-Đọc:  results/Chronus-2/tables/predictions.csv
-Ghi:  results/Chronus-2/tables/
+Chạy (sau chronos2_forecast.py):  python src/Chronos-2/chronos2_evaluate.py
+Đọc:  results/Chronos-2/tables/predictions.csv
+Ghi:  results/Chronos-2/tables/
         rmse.csv               RMSE gộp theo mô hình × tầm
         vs_anom_ar1.csv        kiểm định cấp mùa so với AnomAR1
         rmse_by_phase_h2.csv   RMSE theo giai đoạn lũ (tầm 16 ngày)
         rmse_by_size_h2.csv    RMSE theo cỡ lũ của mùa test (tầm 16 ngày)
         rmse_by_origin.csv     RMSE theo gốc t, tức theo độ dài ngữ cảnh
         rmse_by_season_part.csv  RMSE khi gốc ở phần đầu–giữa mùa (t ≤ 20) và cuối mùa (t ≥ 21)
-      results/Chronus-2/figures/
+      results/Chronos-2/figures/
         rmse_by_horizon.png, rmse_by_origin.png, example_seasons.png
 
 Vì sao kiểm định ở CẤP MÙA: sai số các bước liền nhau trong một mùa tương quan rất mạnh
@@ -33,8 +33,8 @@ from chronos2_data import REPO_ROOT, load_config, load_flood_matrix, step_to_doy
 from chronos2_protocol import HORIZON_DAYS
 from chronos2_forecast import PREDICTIONS_PATH
 
-TABLES = REPO_ROOT / "results" / "Chronus-2" / "tables"
-FIGURES = REPO_ROOT / "results" / "Chronus-2" / "figures"
+TABLES = REPO_ROOT / "results" / "Chronos-2" / "tables"
+FIGURES = REPO_ROOT / "results" / "Chronos-2" / "figures"
 BASELINE = "anom_ar1"
 TOST_MARGIN = 0.05  # "tương đương" nghĩa là RMSE chênh không quá ±5%
 # Giai đoạn lũ theo ngày đích: [từ ngày, đến trước ngày, tên]

@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 import yaml
 
-# File này nằm ở <repo>/src/Chronus-2/, nên lùi 2 cấp là thư mục gốc repo
+# File này nằm ở <repo>/src/Chronos-2/, nên lùi 2 cấp là thư mục gốc repo
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 

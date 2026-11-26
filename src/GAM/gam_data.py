@@ -3,7 +3,7 @@
 Nguồn: data/processed/level1_series.csv, mỗi dòng là một ảnh MODIS đã gộp thành km² ngập
 (Vu et al. 2022). Mỗi mùa lũ có 27 ảnh, cách nhau 8 ngày, từ ngày 153 đến ngày 361.
 Mọi thông số của vùng (năm đầu, số bước, đường dẫn) đọc từ configs/regions/<vùng>.yaml,
-không viết cứng trong code. Cùng cách làm với src/Chronus-2/chronos2_data.py.
+không viết cứng trong code. Cùng cách làm với src/Chronos-2/chronos2_data.py.
 """
 from __future__ import annotations
 
