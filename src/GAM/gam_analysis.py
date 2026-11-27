@@ -9,8 +9,9 @@ Ghi vào results/GAM/tables/:
                             (cùng cột với mọi mô hình của nhóm; Holm trong 3 tầm)
   gam_w7_vs_anom_ar1_w7.csv cùng phép so sánh cho bản chỉ học 7 mùa (mốc là anom_ar1_w7)
   gam_season_rmse.csv       RMSE và thiên lệch của từng mùa test
-  gam_by_phase.csv          RMSE theo giai đoạn lũ (nước lên / đỉnh / nước rút)
-  gam_by_magnitude.csv      RMSE theo cỡ lũ của mùa test, đủ mùa và 7 mùa
+  rmse_by_phase.csv         RMSE theo giai đoạn lũ (nước lên / đỉnh / nước rút), mỗi tầm × mô hình
+  rmse_by_size.csv          RMSE theo cỡ lũ của mùa test, mỗi tầm × mô hình
+                            (hai bảng này cùng dạng với mọi mô hình của nhóm)
   gam_residual_tests.csv    chẩn đoán phần dư từng mùa (thiên lệch, ACF, Ljung–Box)
   gam_residual_summary.csv  tóm tắt phần dư theo tầm, so với ACF lý thuyết
   climatology_bias.csv      anomaly trung bình theo ngày: climatology 5 mùa lệch bao nhiêu
@@ -72,14 +73,21 @@ def label_conditions(pred: pd.DataFrame) -> pd.DataFrame:
         size=pred["season"].map(size))
 
 
-def condition_table(pred: pd.DataFrame, by: str, models) -> pd.DataFrame:
+def condition_table(pred: pd.DataFrame, by: str) -> pd.DataFrame:
+    """Bảng chuẩn rmse_by_phase.csv / rmse_by_size.csv: dòng = (tầm, mô hình), cột = nhóm.
+
+    Cùng dạng ở mọi mô hình của nhóm: cột h, model rồi rising/peak/falling hoặc small/medium/large.
+    """
+    groups = PHASE_NAMES if by == "phase" else SIZE_NAMES
     p = label_conditions(pred)
-    p = p[p["model"].isin(models)]
-    out = (p.assign(sq=(p["y_target"] - p["pred"]) ** 2)
-            .groupby(["h", "model", by], observed=True)["sq"].mean().pow(0.5)
-            .unstack(by).reset_index())
-    out.insert(1, "h_days", out["h"].map(DAYS))
-    return out
+    table = (p.assign(sq=(p["y_target"] - p["pred"]) ** 2)
+              .groupby(["h", "model", by], observed=True)["sq"].mean().pow(0.5)
+              .unstack(by).reindex(columns=groups))
+    order = {m: k for k, m in enumerate(RMSE_ORDER)}
+    rank = [order.get(m, len(order)) for m in table.index.get_level_values("model")]
+    table = table.assign(_rank=rank).reset_index()
+    table.columns.name = None
+    return table.sort_values(["h", "_rank", "model"]).drop(columns="_rank").reset_index(drop=True)
 
 
 # ---- Chẩn đoán phần dư ---------------------------------------------------------------------
@@ -185,7 +193,6 @@ def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")
     cfg, Y = load_data()
     pred = pd.read_csv(TABLES / "predictions.csv")
-    main_pred = pred[pred["model"].isin(["gam", BASELINE])]
 
     tables = {
         # Hai bảng chuẩn của nhóm: làm tròn như các mô hình khác
@@ -193,8 +200,8 @@ def main() -> None:
         "vs_anom_ar1": versus_baseline(pred).round(4),
         "gam_w7_vs_anom_ar1_w7": versus_baseline(pred, "gam_w7", "anom_ar1_w7"),
         "gam_season_rmse": season_table(pred),
-        "gam_by_phase": condition_table(main_pred, "phase", ["gam", BASELINE]),
-        "gam_by_magnitude": condition_table(pred, "size", ["gam", BASELINE, "gam_w7", "anom_ar1_w7"]),
+        "rmse_by_phase": condition_table(pred, "phase").round(0),
+        "rmse_by_size": condition_table(pred, "size").round(0),
         "climatology_bias": climatology_bias(Y, cfg),
         "gam_ablation_rmse": ablation_table(pred),
     }

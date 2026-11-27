@@ -5,8 +5,8 @@ Chạy (sau lightgbm_forecast.py):  python src/LightGBM/lightgbm_evaluate.py
 Ghi:  results/LightGBM/tables/
         rmse.csv               RMSE gộp theo mô hình × tầm (cùng dạng với mọi mô hình của nhóm)
         vs_anom_ar1.csv        kiểm định cấp mùa so với AnomAR1
-        rmse_by_phase_h2.csv   RMSE theo giai đoạn lũ (tầm 16 ngày)
-        rmse_by_size_h2.csv    RMSE theo cỡ lũ của mùa test (tầm 16 ngày)
+        rmse_by_phase.csv      RMSE theo giai đoạn lũ, mỗi tầm × mô hình (cùng dạng với mọi mô hình)
+        rmse_by_size.csv       RMSE theo cỡ lũ của mùa test, mỗi tầm × mô hình (cùng dạng với mọi mô hình)
 
 Vì sao kiểm định ở CẤP MÙA: sai số các bước liền nhau trong một mùa tương quan rất mạnh,
 nên coi 27 bước là 27 quan sát độc lập sẽ thổi phồng ý nghĩa. Đơn vị so sánh là mùa: n = 11.
@@ -146,27 +146,40 @@ def add_flood_size(pred: pd.DataFrame) -> pd.DataFrame:
     return pred.assign(size=pred["season"].map(size).astype(str))
 
 
+def condition_table(pred: pd.DataFrame, by: str) -> pd.DataFrame:
+    """Bảng chuẩn rmse_by_phase.csv / rmse_by_size.csv: dòng = (tầm, mô hình), cột = nhóm.
+
+    Cùng dạng ở mọi mô hình của nhóm: cột h, model rồi rising/peak/falling hoặc small/medium/large.
+    """
+    labelled, groups = ((add_flood_phase(pred), ["rising", "peak", "falling"]) if by == "phase"
+                        else (add_flood_size(pred), ["small", "medium", "large"]))
+    table = (pooled_rmse(labelled, ["h", "model", by])
+             .pivot(index=["h", "model"], columns=by, values="rmse")
+             .reindex(columns=groups))
+    order = {m: k for k, m in enumerate(MODEL_ORDER)}
+    rank = [order.get(m, len(order)) for m in table.index.get_level_values("model")]
+    table = table.assign(_rank=rank).reset_index()
+    return table.sort_values(["h", "_rank", "model"]).drop(columns="_rank").reset_index(drop=True)
+
+
 def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")
     pred = load_predictions()
 
     rmse = rmse_table(pred)
     tests = compare_with_anom_ar1(season_mse(pred))
-    h2 = pred[pred["h"] == 2]
-    by_phase = _ordered(pooled_rmse(add_flood_phase(h2), ["model", "phase"]).pivot(
-        index="model", columns="phase", values="rmse")[["rising", "peak", "falling"]])
-    by_size = _ordered(pooled_rmse(add_flood_size(h2), ["model", "size"]).pivot(
-        index="model", columns="size", values="rmse")[["small", "medium", "large"]])
+    by_phase = condition_table(pred, "phase").round(0)
+    by_size = condition_table(pred, "size").round(0)
 
     rmse.round(0).to_csv(TABLES / "rmse.csv")
     tests.round(4).to_csv(TABLES / "vs_anom_ar1.csv", index=False)
-    by_phase.round(0).to_csv(TABLES / "rmse_by_phase_h2.csv")
-    by_size.round(0).to_csv(TABLES / "rmse_by_size_h2.csv")
+    by_phase.to_csv(TABLES / "rmse_by_phase.csv", index=False)
+    by_size.to_csv(TABLES / "rmse_by_size.csv", index=False)
 
     print("RMSE (km², cột = tầm h):\n", rmse.round(0).to_string(), "\n")
     print("So với AnomAR1 (cấp mùa):\n", tests.round(4).to_string(index=False), "\n")
-    print("Theo giai đoạn lũ, h = 2:\n", by_phase.round(0).to_string(), "\n")
-    print("Theo cỡ lũ, h = 2:\n", by_size.round(0).to_string())
+    print("Theo giai đoạn lũ:\n", by_phase.to_string(index=False), "\n")
+    print("Theo cỡ lũ:\n", by_size.to_string(index=False))
 
 
 if __name__ == "__main__":

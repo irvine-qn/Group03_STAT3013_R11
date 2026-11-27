@@ -7,7 +7,7 @@ import pytest
 
 from anomar1_diagnostics import direct_phi
 from anomar1_eda import inference, season_peaks
-from anomar1_evaluate import compare_with_anom_ar1, condition_tables, holm, rmse, rmse_table, season_mse
+from anomar1_evaluate import compare_with_anom_ar1, condition_table, holm, rmse, rmse_table, season_mse
 
 SRC = Path(__file__).resolve().parents[2] / "src" / "AnomAR1"
 
@@ -29,15 +29,19 @@ def test_rmse_known_value():
 
 def test_condition_tables_use_phase_boundaries():
     pred = pd.DataFrame({
-        "h": 1,
+        "h": 1, "model": "anom_ar1",
         "season": [2010, 2010, 2010, 2011, 2012],
         "doy_target": [256, 257, 298, 200, 200],
         "y_target": [10.0, 10.0, 10.0, 20.0, 30.0],
         "pred": [9.0, 8.0, 7.0, 20.0, 30.0],
     })
-    phase, magnitude = condition_tables(pred)
-    assert phase.loc[1, "peak"] == pytest.approx(2.0) and phase.loc[1, "falling"] == pytest.approx(3.0)
-    assert magnitude.loc[1, "large"] == pytest.approx(0.0)
+    phase = condition_table(pred, "phase").set_index(["h", "model"])
+    size = condition_table(pred, "size").set_index(["h", "model"])
+    assert list(phase.columns) == ["rising", "peak", "falling"]
+    assert list(size.columns) == ["small", "medium", "large"]
+    assert phase.loc[(1, "anom_ar1"), "peak"] == pytest.approx(2.0)
+    assert phase.loc[(1, "anom_ar1"), "falling"] == pytest.approx(3.0)
+    assert size.loc[(1, "anom_ar1"), "large"] == pytest.approx(0.0)
 
 
 def test_holm_known_answer():

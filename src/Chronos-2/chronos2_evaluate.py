@@ -5,8 +5,8 @@ Chạy (sau chronos2_forecast.py):  python src/Chronos-2/chronos2_evaluate.py
 Ghi:  results/Chronos-2/tables/
         rmse.csv               RMSE gộp theo mô hình × tầm
         vs_anom_ar1.csv        kiểm định cấp mùa so với AnomAR1
-        rmse_by_phase_h2.csv   RMSE theo giai đoạn lũ (tầm 16 ngày)
-        rmse_by_size_h2.csv    RMSE theo cỡ lũ của mùa test (tầm 16 ngày)
+        rmse_by_phase.csv      RMSE theo giai đoạn lũ, mỗi tầm × mô hình (cùng dạng với mọi mô hình)
+        rmse_by_size.csv       RMSE theo cỡ lũ của mùa test, mỗi tầm × mô hình (cùng dạng với mọi mô hình)
         rmse_by_origin.csv     RMSE theo gốc t, tức theo độ dài ngữ cảnh
         rmse_by_season_part.csv  RMSE khi gốc ở phần đầu–giữa mùa (t ≤ 20) và cuối mùa (t ≥ 21)
       results/Chronos-2/figures/
@@ -41,6 +41,7 @@ TOST_MARGIN = 0.05  # "tương đương" nghĩa là RMSE chênh không quá ±5%
 PHASES = [(0, 257, "rising"), (257, 298, "peak"), (298, 999, "falling")]
 LATE_ORIGIN = 21  # từ gốc này trở đi, đích 32 ngày rơi vào cuối mùa nước rút (ngày ≥ 345)
 LABELS = {"chronos2": "Chronos-2", "anom_ar1": "AnomAR1"}
+MODEL_ORDER = ["anom_ar1", "chronos2"]
 
 
 # ---------- Đọc dữ liệu ----------
@@ -163,6 +164,22 @@ def add_flood_size(pred: pd.DataFrame) -> pd.DataFrame:
     return pred.assign(size=pred["season"].map(size).astype(str))
 
 
+def condition_table(pred: pd.DataFrame, by: str) -> pd.DataFrame:
+    """Bảng chuẩn rmse_by_phase.csv / rmse_by_size.csv: dòng = (tầm, mô hình), cột = nhóm.
+
+    Cùng dạng ở mọi mô hình của nhóm: cột h, model rồi rising/peak/falling hoặc small/medium/large.
+    """
+    labelled, groups = ((add_flood_phase(pred), ["rising", "peak", "falling"]) if by == "phase"
+                        else (add_flood_size(pred), ["small", "medium", "large"]))
+    table = (pooled_rmse(labelled, ["h", "model", by])
+             .pivot(index=["h", "model"], columns=by, values="rmse")
+             .reindex(columns=groups))
+    order = {m: k for k, m in enumerate(MODEL_ORDER)}
+    rank = [order.get(m, len(order)) for m in table.index.get_level_values("model")]
+    table = table.assign(_rank=rank).reset_index()
+    return table.sort_values(["h", "_rank", "model"]).drop(columns="_rank").reset_index(drop=True)
+
+
 def add_season_part(pred: pd.DataFrame) -> pd.DataFrame:
     """Tách gốc dự báo thành phần đầu–giữa mùa (t ≤ 20) và cuối mùa (t ≥ 21).
 
@@ -238,19 +255,16 @@ def main() -> None:
 
     rmse = pooled_rmse(pred, ["model", "h"]).pivot(index="model", columns="h", values="rmse")
     tests = compare_with_anom_ar1(season_mse(pred))
-    h2 = pred[pred["h"] == 2]
-    by_phase = pooled_rmse(add_flood_phase(h2), ["model", "phase"]).pivot(
-        index="model", columns="phase", values="rmse")[["rising", "peak", "falling"]]
-    by_size = pooled_rmse(add_flood_size(h2), ["model", "size"]).pivot(
-        index="model", columns="size", values="rmse")[["small", "medium", "large"]]
+    by_phase = condition_table(pred, "phase").round(0)
+    by_size = condition_table(pred, "size").round(0)
     by_origin = pooled_rmse(pred, ["model", "h", "t"])
     by_part = pooled_rmse(add_season_part(pred), ["h", "season_part", "model"]).pivot(
         index=["h", "season_part"], columns="model", values="rmse")
 
     rmse.round(0).to_csv(TABLES / "rmse.csv")
     tests.round(4).to_csv(TABLES / "vs_anom_ar1.csv", index=False)
-    by_phase.round(0).to_csv(TABLES / "rmse_by_phase_h2.csv")
-    by_size.round(0).to_csv(TABLES / "rmse_by_size_h2.csv")
+    by_phase.to_csv(TABLES / "rmse_by_phase.csv", index=False)
+    by_size.to_csv(TABLES / "rmse_by_size.csv", index=False)
     by_origin.round(1).to_csv(TABLES / "rmse_by_origin.csv", index=False)
     by_part.round(0).to_csv(TABLES / "rmse_by_season_part.csv")
 
@@ -260,8 +274,8 @@ def main() -> None:
 
     print("RMSE (km², cột = tầm h):\n", rmse.round(0).to_string(), "\n")
     print("So với AnomAR1 (cấp mùa):\n", tests.round(4).to_string(index=False), "\n")
-    print("Theo giai đoạn lũ, h = 2:\n", by_phase.round(0).to_string(), "\n")
-    print("Theo cỡ lũ, h = 2:\n", by_size.round(0).to_string(), "\n")
+    print("Theo giai đoạn lũ:\n", by_phase.to_string(index=False), "\n")
+    print("Theo cỡ lũ:\n", by_size.to_string(index=False), "\n")
     print("Đầu–giữa mùa và cuối mùa:\n", by_part.round(0).to_string())
 
 

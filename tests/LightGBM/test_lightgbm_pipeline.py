@@ -91,3 +91,25 @@ def test_standard_tables_have_team_columns():
                                    "mse_diff_pct_ci_low", "mse_diff_pct_ci_high", "p_t", "p_wilcoxon",
                                    "p_tost", "p_t_holm"]
     assert tests.iloc[0]["rmse_ratio"] == pytest.approx(0.5, abs=0.05) and tests.iloc[0]["wins"] == 11
+
+
+def test_condition_table_standard_layout():
+    import pandas as pd
+    from lightgbm_evaluate import condition_table
+    rows = []
+    for model, err in [("anom_ar1", 1.0), ("lgbm_raw", 2.0)]:
+        for h in (1, 2):
+            for season, peak in [(2010, 10.0), (2011, 20.0), (2012, 30.0)]:
+                for doy in (250, 260, 300):
+                    rows.append({"season": season, "h": h, "model": model, "doy_target": doy,
+                                 "y_target": peak if doy == 260 else 1.0, "pred": (peak if doy == 260 else 1.0) - err})
+    pred = pd.DataFrame(rows)
+    phase = condition_table(pred, "phase")
+    size = condition_table(pred, "size")
+    assert list(phase.columns) == ["h", "model", "rising", "peak", "falling"]
+    assert list(size.columns) == ["h", "model", "small", "medium", "large"]
+    assert sorted(zip(phase["h"], phase["model"])) == [(1, "anom_ar1"), (1, "lgbm_raw"), (2, "anom_ar1"), (2, "lgbm_raw")]
+    assert list(phase["h"]) == [1, 1, 2, 2]
+    by_model = phase.set_index(["h", "model"])
+    assert by_model.loc[(2, "lgbm_raw")].tolist() == [2.0, 2.0, 2.0]
+    assert size.set_index(["h", "model"]).loc[(1, "anom_ar1"), "large"] == 1.0

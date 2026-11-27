@@ -5,8 +5,8 @@ Chạy (sau anomar1_forecast.py):  python src/AnomAR1/anomar1_evaluate.py
 Ghi:  results/AnomAR1/tables/
         rmse.csv               RMSE gộp theo mô hình × tầm (cùng dạng với mọi mô hình của nhóm)
         vs_anom_ar1.csv        kiểm định cấp mùa của các mốc khác so với AnomAR1
-        rmse_by_phase.csv      RMSE của AnomAR1 theo giai đoạn lũ, mỗi tầm
-        rmse_by_magnitude.csv  RMSE của AnomAR1 theo cỡ lũ của mùa test, mỗi tầm
+        rmse_by_phase.csv      RMSE theo giai đoạn lũ, mỗi tầm × mô hình (cùng dạng với mọi mô hình)
+        rmse_by_size.csv       RMSE theo cỡ lũ của mùa test, mỗi tầm × mô hình (cùng dạng với mọi mô hình)
 
 Vì sao kiểm định ở CẤP MÙA: sai số các bước liền nhau trong một mùa tương quan rất mạnh,
 nên coi 27 bước là 27 quan sát độc lập sẽ thổi phồng ý nghĩa. Đơn vị so sánh là mùa: n = 11.
@@ -135,16 +135,28 @@ def compare_with_anom_ar1(season_errors: pd.DataFrame, margin: float = TOST_MARG
 
 # ---------- Theo điều kiện ----------
 
-def condition_tables(pred: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """RMSE theo giai đoạn lũ (theo ngày đích) và theo cỡ lũ (tam phân vị đỉnh của mùa test)."""
+def label_conditions(pred: pd.DataFrame) -> pd.DataFrame:
+    """Gắn giai đoạn lũ (theo ngày đích) và cỡ lũ (tam phân vị đỉnh của mùa test) cho mỗi dòng."""
     size = pd.qcut(pred.groupby("season")["y_target"].max(), 3, labels=SIZES)
-    framed = pred.assign(
-        phase=pd.cut(pred["doy_target"], PHASE_EDGES, right=False, labels=PHASES),
-        size=pred["season"].map(size),
+    return pred.assign(
+        phase=pd.cut(pred["doy_target"], PHASE_EDGES, right=False, labels=PHASES).astype(str),
+        size=pred["season"].map(size).astype(str),
     )
-    phase = framed.groupby(["h", "phase"], observed=True).apply(rmse, include_groups=False).unstack()
-    magnitude = framed.groupby(["h", "size"], observed=True).apply(rmse, include_groups=False).unstack()
-    return phase, magnitude
+
+
+def condition_table(pred: pd.DataFrame, by: str) -> pd.DataFrame:
+    """Bảng chuẩn rmse_by_phase.csv / rmse_by_size.csv: dòng = (tầm, mô hình), cột = nhóm.
+
+    Cùng dạng ở mọi mô hình của nhóm: cột h, model rồi rising/peak/falling hoặc small/medium/large.
+    """
+    groups = PHASES if by == "phase" else SIZES
+    table = (pooled_rmse(label_conditions(pred), ["h", "model", by])
+             .pivot(index=["h", "model"], columns=by, values="rmse")
+             .reindex(columns=groups))
+    order = {m: k for k, m in enumerate(MODEL_ORDER)}
+    rank = [order.get(m, len(order)) for m in table.index.get_level_values("model")]
+    table = table.assign(_rank=rank).reset_index()
+    return table.sort_values(["h", "_rank", "model"]).drop(columns="_rank").reset_index(drop=True)
 
 
 def main() -> None:
@@ -153,17 +165,18 @@ def main() -> None:
 
     table = rmse_table(pred)
     tests = compare_with_anom_ar1(season_mse(pred))
-    phase, magnitude = condition_tables(pred[pred["model"] == BASELINE])
+    phase = condition_table(pred, "phase").round(0)
+    size = condition_table(pred, "size").round(0)
 
     table.round(0).to_csv(TABLES / "rmse.csv")
     tests.round(4).to_csv(TABLES / "vs_anom_ar1.csv", index=False)
-    phase.to_csv(TABLES / "rmse_by_phase.csv")
-    magnitude.to_csv(TABLES / "rmse_by_magnitude.csv")
+    phase.to_csv(TABLES / "rmse_by_phase.csv", index=False)
+    size.to_csv(TABLES / "rmse_by_size.csv", index=False)
 
     print("RMSE (km², cột = tầm h):\n", table.round(0).to_string(), "\n")
     print("So với AnomAR1 (cấp mùa):\n", tests.round(4).to_string(index=False), "\n")
-    print("AnomAR1 theo giai đoạn lũ:\n", phase.round(0).to_string(), "\n")
-    print("AnomAR1 theo cỡ lũ:\n", magnitude.round(0).to_string())
+    print("Theo giai đoạn lũ:\n", phase.to_string(index=False), "\n")
+    print("Theo cỡ lũ:\n", size.to_string(index=False))
 
 
 if __name__ == "__main__":

@@ -1,5 +1,0 @@
-model,rising,peak,falling
-anom_ar1,1154.0,1391.0,1578.0
-lgbm_raw,1048.0,1531.0,1321.0
-lgbm_anomaly,1115.0,1413.0,1567.0
-lgbm_noclim,1166.0,1554.0,1235.0

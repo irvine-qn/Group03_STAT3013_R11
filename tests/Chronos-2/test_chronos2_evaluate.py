@@ -76,3 +76,25 @@ def test_missing_predictions_message(tmp_path):
 def test_season_part_split_at_origin_21():
     pred = pd.DataFrame({"t": [3, 20, 21, 26]})
     assert list(add_season_part(pred)["season_part"]) == ["t<=20", "t<=20", "t>=21", "t>=21"]
+
+
+def test_condition_table_standard_layout():
+    import pandas as pd
+    from chronos2_evaluate import condition_table
+    rows = []
+    for model, err in [("anom_ar1", 1.0), ("chronos2", 2.0)]:
+        for h in (1, 2):
+            for season, peak in [(2010, 10.0), (2011, 20.0), (2012, 30.0)]:
+                for doy in (250, 260, 300):
+                    rows.append({"season": season, "h": h, "model": model, "doy_target": doy,
+                                 "y_target": peak if doy == 260 else 1.0, "pred": (peak if doy == 260 else 1.0) - err})
+    pred = pd.DataFrame(rows)
+    phase = condition_table(pred, "phase")
+    size = condition_table(pred, "size")
+    assert list(phase.columns) == ["h", "model", "rising", "peak", "falling"]
+    assert list(size.columns) == ["h", "model", "small", "medium", "large"]
+    assert sorted(zip(phase["h"], phase["model"])) == [(1, "anom_ar1"), (1, "chronos2"), (2, "anom_ar1"), (2, "chronos2")]
+    assert list(phase["h"]) == [1, 1, 2, 2]
+    by_model = phase.set_index(["h", "model"])
+    assert by_model.loc[(2, "chronos2")].tolist() == [2.0, 2.0, 2.0]
+    assert size.set_index(["h", "model"]).loc[(1, "anom_ar1"), "large"] == 1.0

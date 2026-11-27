@@ -256,8 +256,8 @@ def fig_seasons_ratio():
 
 # ---- Hình 9: theo điều kiện ----------------------------------------------------------------------
 def fig_conditions():
-    ph = pd.read_csv(TABLES / "gam_by_phase.csv")
-    mg = pd.read_csv(TABLES / "gam_by_magnitude.csv")
+    ph = pd.read_csv(TABLES / "rmse_by_phase.csv")
+    mg = pd.read_csv(TABLES / "rmse_by_size.csv")
     fig, axes = plt.subplots(2, 3, figsize=(14, 7))
     for col, h in enumerate(HORIZONS):
         for row, (tab, keys, names, models) in enumerate([
