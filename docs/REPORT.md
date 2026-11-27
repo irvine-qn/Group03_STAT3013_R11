@@ -278,6 +278,13 @@ diện tích ngập trung bình (7.003 km²).
 Bảng: `results/<Model>/tables/rmse.csv` (dòng = mô hình, cột 1/2/4 = tầm), và gộp mọi mô hình ở
 `results/Comparison/tables/rmse_all.csv`.
 
+### 5.1b R² gộp
+
+R² = 1 − SSE/SST: tỉ lệ biến động của diện tích ngập (quanh trung bình của mọi ngày đích ở cùng tầm) mà dự báo giải thích được.
+Ở cùng một tầm mọi mô hình dự báo đúng cùng các dòng, nên SST là chung: R² chỉ là RMSE viết lại theo thang 0–1
+(R² cao hơn ⇔ RMSE thấp hơn), không thêm thông tin mới nhưng dễ đọc hơn. R² âm nghĩa là tệ hơn cả việc đoán bằng trung bình.
+Bảng: `results/Comparison/tables/r2_all.csv` (cùng dạng `rmse_all.csv`).
+
 ### 5.2 Vì sao kiểm định theo **mùa** (n = 11) chứ không theo 748 dự báo
 
 Sai số của các bước liền nhau trong cùng mùa rất giống nhau (năm nay đoán cao ở bước 10 thì bước 11 cũng thường cao).
@@ -747,13 +754,34 @@ tối đa 9 × 10⁻¹³ km² (chỉ là sai số làm tròn máy). Nếu lệch
 | Clim5 | mốc ngây thơ | 1.812 | 1.845 | 1.916 |
 | Persistence | mốc ngây thơ | 1.312 | 2.068 | 3.456 |
 
+### 7.3b Bảng R² gộp (`r2_all.csv`)
+
+| Mô hình | Vai trò | 8 ngày | 16 ngày | 32 ngày |
+|---|---|--:|--:|--:|
+| AnomAR1 | mốc | 0,868 | 0,795 | 0,704 |
+| GAM | chính | 0,866 | 0,796 | 0,704 |
+| LightGBM thô | chính | **0,877** | **0,821** | 0,704 |
+| Chronos-2 | chính | 0,861 | 0,783 | 0,668 |
+| AnomAR1 7 mùa | biến thể | 0,869 | 0,801 | 0,706 |
+| GAM 7 mùa | biến thể | 0,868 | 0,794 | 0,696 |
+| LightGBM anomaly | biến thể | 0,865 | 0,798 | 0,700 |
+| LightGBM không climatology | biến thể | 0,875 | 0,816 | 0,672 |
+| Clim5 | mốc ngây thơ | 0,634 | 0,630 | 0,618 |
+| Persistence | mốc ngây thơ | 0,808 | 0,536 | −0,241 |
+
+- 4 mô hình chính giải thích khoảng 86–88% biến động ở 8 ngày, 78–82% ở 16 ngày, 67–70% ở 32 ngày.
+- Khác biệt giữa các mô hình chính chỉ khoảng 1–4 điểm phần trăm R²; xếp hạng trùng với RMSE (cùng mẫu số).
+- Persistence ở 32 ngày có R² âm: đoán "giữ nguyên như hôm nay" còn tệ hơn đoán bằng trung bình.
+
 ### 7.4 Hình so sánh
 
 **Hình 7.1 – RMSE theo tầm** (`results/Comparison/figures/rmse_by_horizon.png`)
 
 ![cmp horizon](../results/Comparison/figures/rmse_by_horizon.png)
 
-- 4 mô hình chính (nét đậm) nằm sát nhau trong một dải hẹp; Persistence (chấm mờ) tăng vọt; Clim5 (gạch chấm mờ) gần như phẳng.
+- Mỗi mô hình là một đường liền có màu riêng: AnomAR1 xanh dương, GAM đỏ, LightGBM tím, Chronos-2 cam, Clim5 xanh lá, Persistence nâu
+  (4 mô hình chính vẽ nét dày hơn). Cùng bảng màu này dùng cho mọi hình ở mục 7–8.
+- 4 mô hình chính nằm sát nhau trong một dải hẹp (đường xanh dương của AnomAR1 gần như bị đường đỏ của GAM che); Persistence tăng vọt; Clim5 gần như phẳng.
 - Ở 8 ngày Persistence còn khá (1.312) nhưng từ 16 ngày nó tệ hơn cả Clim5. Mọi mô hình chính đều tốt hơn hai mốc ngây thơ ở mọi tầm.
 
 **Hình 7.2 – Tỉ lệ từng mùa** (`results/Comparison/figures/season_ratio.png`, bảng `season_rmse.csv`)
@@ -836,7 +864,7 @@ Bảng chuẩn (cùng dạng ở mọi thư mục): `rmse_by_phase.csv` (cột h
 | 32 | LightGBM | **1.767** | 1.518 | 1.728 |
 | 32 | Chronos-2 | 1.972 | 1.479 | 1.807 |
 
-**Hình 8.1** (`results/Comparison/figures/conditions.png`): cùng số liệu dưới dạng cột. Mỗi mô hình có màu và kiểu tô riêng (in đen trắng vẫn đọc được).
+**Hình 8.1** (`results/Comparison/figures/conditions.png`): cùng số liệu dưới dạng cột. Mỗi mô hình một màu (xanh dương, đỏ, tím, cam như Hình 7.1).
 
 ![conditions](../results/Comparison/figures/conditions.png)
 
@@ -880,6 +908,10 @@ Bảng chuẩn (cùng dạng ở mọi thư mục): `rmse_by_phase.csv` (cột h
 - Mục tiêu là sản phẩm **suy ra** từ ảnh vệ tinh MODIS, có sai số đo; 2 ảnh nội suy, 15 ảnh trùng lặp được giữ lại và gắn cờ.
 - Không dùng biến ngoài (mưa, mực nước thượng nguồn, thủy triều) vì bộ dữ liệu không có.
 - Một số dự báo âm (không cắt về 0 để giữ giao thức).
+- Không dùng SEM (mô hình phương trình cấu trúc): SEM cần nhiều biến quan sát để dựng biến tiềm ẩn và đường dẫn nhân quả
+  (ví dụ khảo sát nhiều câu hỏi). Dữ liệu ở đây là **một chuỗi thời gian một biến** (diện tích ngập toàn vùng) và không có biến ngoài,
+  nên không có cấu trúc đo lường nào để SEM ước lượng; chỉ số RMSEA vì vậy cũng không áp dụng. Thay vào đó, phần suy luận dùng
+  kiểm định cặp cấp mùa (t, Wilcoxon, TOST, Holm) và R²/RMSE để so mô hình.
 - Các bảng theo điều kiện, bóc tách GAM, chia gốc t ≤ 20 / ≥ 21 của Chronos-2, fine-tune Chronos-2: lập sau khi xem kết quả → chỉ mô tả.
 
 ---
@@ -1034,6 +1066,7 @@ python -m streamlit run app/streamlit_app.py
 | tables/vs_anom_ar1_main.csv | **bảng chính**: họ chính 9 phép, không làm tròn |
 | tables/vs_anom_ar1_all.csv | mọi mô hình so với AnomAR1 (làm tròn), có `p_t_holm_main` cho bản chính |
 | tables/rmse_all.csv | RMSE mọi mô hình, kèm thư mục nguồn và vai trò |
+| tables/r2_all.csv | R² gộp mọi mô hình (cùng dạng rmse_all) |
 | tables/rmse_by_phase.csv, rmse_by_size.csv | 4 bản chính × 3 tầm |
 | tables/season_rmse.csv | RMSE từng mùa và tỉ lệ so với AnomAR1 |
 | tables/baseline_check.csv | kiểm tra mốc chung |

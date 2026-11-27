@@ -23,6 +23,7 @@ results/{AnomAR1,GAM,LightGBM,Chronos-2}/tables/predictions.csv
 | Bảng | Nội dung |
 |---|---|
 | `baseline_check.csv` | cột `anom_ar1` của mỗi thư mục lệch bao nhiêu so với thư mục AnomAR1 |
+| `r2_all.csv` | R² gộp = 1 − SSE/SST của mọi mô hình × tầm (SST chung cho mọi mô hình ở cùng tầm) |
 | `rmse_all.csv` | RMSE gộp của mọi mô hình × tầm, kèm thư mục nguồn và vai trò (`baseline`, `main`, `variant`, `simple`) |
 | `vs_anom_ar1_all.csv` | kiểm định cấp mùa so với AnomAR1; `p_t_holm_main` = Holm trên 9 phép so của 3 bản chính × 3 tầm |
 | `vs_anom_ar1_main.csv` | chỉ họ chính (9 dòng), **không làm tròn**: `p_t_holm_model` (Holm trong thư mục mô hình) và `p_t_holm_main` (Holm trên 9 phép so). Báo cáo và video trích số từ bảng này |
