@@ -27,7 +27,7 @@ data/processed/level1_series.csv
         ▼
    gam_build_dataset.py   (bước 1) bảng dòng để xem → data/processed/GAM/
    gam_run_model.py       (bước 2) dự báo 11 mùa test → predictions.csv, cấu hình, hệ số, bóc tách
-   gam_analysis.py        (bước 3) rmse.csv, vs_anom_ar1.csv, bảng theo điều kiện, phần dư
+   gam_analysis.py        (bước 3) rmse.csv, vs_anom_ar1.csv, rmse_by_phase.csv, rmse_by_size.csv, phần dư
    gam_figures.py         (bước 4) 12 hình
 ```
 

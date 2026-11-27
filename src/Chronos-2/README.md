@@ -76,7 +76,7 @@ So với AnomAR1 ở cấp mùa, n = 11 (`results/Chronos-2/tables/vs_anom_ar1.c
 | 16 ngày | 1,027 | 2/11 | +7,2% (−2,4; +16,8) | 0,346 | 0,175 | 0,211 | 0,605 |
 | 32 ngày | 1,060 | 2/11 | +14,3% (+4,0; +24,5) | 0,005 | 0,010 | 0,748 | 0,015 |
 
-Theo điều kiện, tầm 16 ngày (`rmse_by_phase_h2.csv`, `rmse_by_size_h2.csv`):
+Theo điều kiện, tầm 16 ngày (trích từ `rmse_by_phase.csv`, `rmse_by_size.csv`, hai bảng có đủ 3 tầm):
 
 | | Nước lên | Đỉnh | Nước rút | Lũ nhỏ | Lũ vừa | Lũ lớn |
 |---|--:|--:|--:|--:|--:|--:|

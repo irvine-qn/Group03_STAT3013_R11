@@ -26,7 +26,7 @@ data/processed/level1_series.csv
         ▼
    anomar1_forecast.py     (bước 1) 11 mùa test × 3 tầm → predictions.csv, phi_by_fold.csv, regression_rows.csv
         ▼
-   anomar1_evaluate.py     (bước 2) rmse.csv, vs_anom_ar1.csv, rmse_by_phase.csv, rmse_by_magnitude.csv
+   anomar1_evaluate.py     (bước 2) rmse.csv, vs_anom_ar1.csv, rmse_by_phase.csv, rmse_by_size.csv
         ▼
    anomar1_diagnostics.py  (bước 3) φ^h so với φ trực tiếp, kiểm định phần dư, hình
 

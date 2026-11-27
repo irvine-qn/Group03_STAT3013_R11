@@ -29,7 +29,7 @@ data/processed/level1_series.csv
    lightgbm_model.py      3 biến thể, lưới 6 cấu hình, lưới Random Forest để đối chứng
         ▼
    lightgbm_forecast.py   (bước 1) 11 mùa test × 3 tầm → predictions.csv (seed 0)
-   lightgbm_evaluate.py   (bước 2) rmse.csv, vs_anom_ar1.csv, rmse_by_phase_h2.csv, rmse_by_size_h2.csv
+   lightgbm_evaluate.py   (bước 2) rmse.csv, vs_anom_ar1.csv, rmse_by_phase.csv, rmse_by_size.csv
    lightgbm_diag.py       (bước 3) cấu hình chọn, SHAP, 10 seed, permutation importance, so với Random Forest
 ```
 

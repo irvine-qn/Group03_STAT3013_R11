@@ -32,7 +32,7 @@ folder lists the scripts in the order to run them.
 
 ### Shared result tables
 
-Every model writes the same three tables to `results/<Model>/tables/`, so they
+Every model writes the same five tables to `results/<Model>/tables/`, so they
 can be combined:
 
 | File | Columns |
@@ -40,6 +40,8 @@ can be combined:
 | `predictions.csv` | `season, t, doy_target, y_target, model, h, pred` (one row per forecast) |
 | `rmse.csv` | `model, 1, 2, 4` (pooled RMSE in km² for horizons h = 1, 2, 4 steps = 8, 16, 32 days) |
 | `vs_anom_ar1.csv` | `model, h, n_seasons, rmse_ratio, wins, mse_diff_pct, mse_diff_pct_ci_low, mse_diff_pct_ci_high, p_t, p_wilcoxon, p_tost, p_t_holm` (season-level tests against AnomAR1, n = 11) |
+| `rmse_by_phase.csv` | `h, model, rising, peak, falling` (pooled RMSE by flood phase of the target day: before day 257, days 257–297, from day 298) |
+| `rmse_by_size.csv` | `h, model, small, medium, large` (pooled RMSE by flood size: the 11 test seasons split into terciles of their peak) |
 
 Other tables in each folder are specific to that model.
 
