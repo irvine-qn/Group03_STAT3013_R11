@@ -6,6 +6,7 @@ Ghi:  results/Comparison/tables/
         baseline_check.csv     cột anom_ar1 của mỗi thư mục lệch bao nhiêu so với thư mục AnomAR1
         rmse_all.csv           RMSE gộp của mọi mô hình × tầm, một bảng
         vs_anom_ar1_all.csv    kiểm định cấp mùa so với AnomAR1, Holm trên TOÀN BỘ 9 phép so chính
+        vs_anom_ar1_main.csv   chỉ họ chính (9 dòng), không làm tròn, có cả p Holm theo từng mô hình và theo họ chính
         rmse_by_phase.csv      RMSE theo giai đoạn lũ, 4 bản chính × 3 tầm
         rmse_by_size.csv       RMSE theo cỡ lũ của mùa test, 4 bản chính × 3 tầm
         season_rmse.csv        RMSE từng mùa test của 4 bản chính và tỉ lệ so với AnomAR1
@@ -195,6 +196,30 @@ def compare_with_anom_ar1(pred: pd.DataFrame, margin: float = TOST_MARGIN) -> pd
     return out
 
 
+def model_families(results: Path = RESULTS) -> dict[str, list[str]]:
+    """Họ Holm của từng thư mục = các mô hình có trong vs_anom_ar1.csv của thư mục đó."""
+    return {s: list(pd.read_csv(results / s / "tables" / "vs_anom_ar1.csv")["model"].unique()) for s in SOURCES}
+
+
+def main_family(pred: pd.DataFrame, results: Path = RESULTS) -> pd.DataFrame:
+    """Bảng vs_anom_ar1_main.csv: họ chính 3 bản chính × 3 tầm = 9 phép so, KHÔNG làm tròn.
+
+    p_t tính lại từ predictions.csv (MSE từng mùa) nên Holm nhân trên p chưa làm tròn.
+      p_t_holm_model  Holm trong họ của thư mục mô hình đó (tái tạo đúng vs_anom_ar1.csv của thư mục)
+      p_t_holm_main   Holm trên 9 phép so của họ chính
+    """
+    full = compare_with_anom_ar1(pred)
+    full["p_t_holm_model"] = np.nan
+    for source, family in model_families(results).items():
+        rows = full["model"].isin(family)
+        full.loc[rows, "p_t_holm_model"] = holm(full.loc[rows, "p_t"].to_numpy())
+    main = full[full["role"] == "main"].copy()
+    main["model"] = pd.Categorical(main["model"], CONTENDERS, ordered=True)
+    main = main.sort_values(["model", "h"]).astype({"model": str}).reset_index(drop=True)
+    return main[["model", "h", "n_seasons", "rmse_ratio", "wins", "mse_diff_pct", "mse_diff_pct_ci_low",
+                 "mse_diff_pct_ci_high", "p_t", "p_wilcoxon", "p_tost", "p_t_holm_model", "p_t_holm_main"]]
+
+
 # ---------- Theo điều kiện và theo mùa ----------
 
 def label_conditions(pred: pd.DataFrame) -> pd.DataFrame:
@@ -246,6 +271,8 @@ def main() -> None:
     TABLES.mkdir(parents=True, exist_ok=True)
     for name, table in tables.items():
         table.to_csv(TABLES / f"{name}.csv", index=False)
+    family = main_family(pred)
+    family.to_csv(TABLES / "vs_anom_ar1_main.csv", index=False)  # không làm tròn: video và báo cáo trích từ đây
     with pd.option_context("display.width", 200, "display.max_columns", 20):
         for name in ["baseline_check", "rmse_all", "vs_anom_ar1_all", "rmse_by_phase", "rmse_by_size"]:
             print(f"\n== {name}\n{tables[name].to_string(index=False)}")
