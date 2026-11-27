@@ -45,6 +45,21 @@ can be combined:
 
 Other tables in each folder are specific to that model.
 
+### Comparison across models
+
+[`src/Comparison/`](src/Comparison/) reads the four `predictions.csv` files, checks that every folder uses the
+same AnomAR1 forecasts, and writes the combined tables and figures to `results/Comparison/`. Its season-level
+tests apply Holm over all 9 main comparisons (3 models × 3 horizons). Start from
+[`notebooks/Comparison/`](notebooks/Comparison/).
+
+```powershell
+python src/Comparison/comparison_tables.py
+python src/Comparison/comparison_figures.py
+```
+
+Result over 11 test seasons: no model beats AnomAR1 significantly; zero-shot Chronos-2 is significantly worse at
+32 days (Holm p = 0.045); GAM is equivalent to AnomAR1 at 8 days within ±5% RMSE.
+
 ## Interactive report
 
 Reads the shared tables of all four models:
@@ -74,10 +89,10 @@ Group03_STAT3013_R11/
 │   ├── raw/                  # Source datasets (not committed)
 │   └── processed/            # Derived datasets (level1_series.csv is the shared input)
 ├── docs/                     # Project documentation
-├── notebooks/                # Overview notebook of each model (Vietnamese and English)
-├── results/                  # Model outputs, one folder per model
-├── src/                      # Model source code, one folder per model
-├── tests/                    # Tests, one folder per model
+├── notebooks/                # Overview notebook of each model and of the comparison (Vietnamese and English)
+├── results/                  # Outputs, one folder per model plus Comparison/
+├── src/                      # Source code, one folder per model plus Comparison/
+├── tests/                    # Tests, one folder per model plus Comparison/
 ├── pyproject.toml            # Project metadata and pytest settings
 ├── requirements.txt          # Pinned runtime dependencies
 └── README.md
