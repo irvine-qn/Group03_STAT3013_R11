@@ -31,7 +31,7 @@ def run(Y: np.ndarray, config: dict, models: dict = MODELS) -> pd.DataFrame:
             keep = test[["season", "t", "doy_target", "y_target"]]
             for name, model in models.items():
                 preds.append(keep.assign(model=name, h=h, pred=model(train, test, h)))
-        print(f"  mùa {fold.test_season}: xong", flush=True)
+        print(f"  season {fold.test_season}: done", flush=True)
     return pd.concat(preds, ignore_index=True)[COLUMNS]
 
 
@@ -43,7 +43,7 @@ def main() -> None:
     TABLES.mkdir(parents=True, exist_ok=True)
     path = TABLES / "predictions.csv"
     pred.to_csv(path, index=False)
-    print(f"{len(pred)} dự báo -> {path.relative_to(REPO_ROOT)}")
+    print(f"{len(pred)} forecasts -> {path.relative_to(REPO_ROOT)}")
 
 
 if __name__ == "__main__":

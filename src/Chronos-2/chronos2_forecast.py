@@ -83,7 +83,7 @@ def make_predictions(Y, config: dict, chronos: Chronos2ZeroShot) -> pd.DataFrame
     for test_season in TEST_SEASONS:
         rows += chronos_season(Y, config, chronos, test_season)
         rows += anom_ar1_season(Y, config, test_season)
-        print(f"  mùa {test_season}: xong", flush=True)
+        print(f"  season {test_season}: done", flush=True)
     return pd.DataFrame(rows, columns=COLUMNS)
 
 
@@ -91,12 +91,12 @@ def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")  # để in tiếng Việt trên console Windows
     config = load_config("mekong")
     Y = load_flood_matrix(config)
-    print("Tải Chronos-2 ...", flush=True)
+    print("Loading Chronos-2 ...", flush=True)
     chronos = Chronos2ZeroShot(load_pipeline())
     predictions = make_predictions(Y, config, chronos)
     PREDICTIONS_PATH.parent.mkdir(parents=True, exist_ok=True)
     predictions.to_csv(PREDICTIONS_PATH, index=False)
-    print(f"{len(predictions)} dự báo -> {PREDICTIONS_PATH.relative_to(REPO_ROOT)}")
+    print(f"{len(predictions)} forecasts -> {PREDICTIONS_PATH.relative_to(REPO_ROOT)}")
 
 
 if __name__ == "__main__":

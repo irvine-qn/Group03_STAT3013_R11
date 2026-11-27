@@ -24,9 +24,9 @@ BASELINE = "anom_ar1"           # mốc thống kê chính để so sánh
 # Ranh giới giai đoạn lũ theo ngày trong năm của bước đích (cùng ranh giới với bảng thăm dò của nhóm)
 PHASE_EDGES = [0, 257, 298, 999]
 PHASE_NAMES = ["rising", "peak", "falling"]
-PHASE_VI = {"rising": "Nước lên", "peak": "Đỉnh lũ", "falling": "Nước rút"}
+PHASE_LABEL = {"rising": "Rising", "peak": "Peak", "falling": "Falling"}
 SIZE_NAMES = ["small", "medium", "large"]
-SIZE_VI = {"small": "Lũ nhỏ", "medium": "Lũ vừa", "large": "Lũ lớn"}
+SIZE_LABEL = {"small": "Small flood", "medium": "Medium flood", "large": "Large flood"}
 
 
 def load_data():

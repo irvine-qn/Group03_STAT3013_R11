@@ -46,13 +46,13 @@ STYLE = {
 LABEL = {
     "anom_ar1": "AnomAR1",
     "gam": "GAM",
-    "lgbm_raw": "LightGBM thô",
+    "lgbm_raw": "LightGBM raw",
     "chronos2": "Chronos-2",
     "clim5": "Clim5",
     "persistence": "Persistence",
 }
-PHASE_VI = {"rising": "Nước lên", "peak": "Đỉnh lũ", "falling": "Nước rút"}
-SIZE_VI = {"small": "Lũ nhỏ", "medium": "Lũ vừa", "large": "Lũ lớn"}
+PHASE_LABEL = {"rising": "Rising", "peak": "Peak", "falling": "Falling"}
+SIZE_LABEL = {"small": "Small flood", "medium": "Medium flood", "large": "Large flood"}
 
 plt.rcParams.update(
     {
@@ -104,9 +104,9 @@ def fig_rmse_by_horizon(rmse: pd.DataFrame) -> None:
         )
     ax.set(
         xticks=days,
-        xlabel="Tầm dự báo (ngày)",
-        ylabel="RMSE gộp (km²)",
-        title="RMSE gộp, 11 mùa test 2010–2020",
+        xlabel="Forecast horizon (days)",
+        ylabel="Pooled RMSE (km²)",
+        title="Pooled RMSE, 11 test seasons 2010–2020",
     )
     ax.legend(ncols=2, fontsize=9)
     save(fig, "rmse_by_horizon.png")
@@ -124,14 +124,14 @@ def fig_season_ratio(seasons: pd.DataFrame, tests: pd.DataFrame) -> None:
             row = tests[(tests["model"] == model) & (tests["h"] == h)].iloc[0]
             ax.hlines(row["rmse_ratio"], k - 0.3, k + 0.3, color=INK, lw=2.5, zorder=4)
             ticks.append(
-                f"{LABEL[model]}\nthắng {int(row['wins'])}/11\np = {row['p_t_holm_main']:.3f}"
+                f"{LABEL[model]}\nwins {int(row['wins'])}/11\np = {row['p_t_holm_main']:.3f}"
             )
         ax.axhline(1, color=INK, lw=1, ls="--")
-        ax.set(xticks=range(len(CONTENDERS)), title=f"Tầm {HORIZON_DAYS[h]} ngày")
+        ax.set(xticks=range(len(CONTENDERS)), title=f"Horizon {HORIZON_DAYS[h]} days")
         ax.set_xticklabels(ticks, fontsize=8.5)
-    axes[0].set_ylabel("RMSE mô hình / RMSE AnomAR1\n(< 1: tốt hơn AnomAR1)")
+    axes[0].set_ylabel("Model RMSE / AnomAR1 RMSE\n(< 1: better than AnomAR1)")
     fig.suptitle(
-        "Mỗi điểm là một mùa test; vạch đen = tỉ lệ RMSE gộp. Dưới tên: số mùa thắng AnomAR1, p sau Holm toàn cục (9 phép so)",
+        "Each dot is one test season; black bar = pooled RMSE ratio. Below name: seasons won vs AnomAR1, global Holm-adjusted p (9 comparisons)",
         fontsize=10,
         color=MUTED,
     )
@@ -143,7 +143,7 @@ def fig_conditions(phase: pd.DataFrame, size: pd.DataFrame) -> None:
     width = 0.8 / len(MAIN)
     for col, h in enumerate(HORIZONS):
         for row, (table, groups, names) in enumerate(
-            [(phase, PHASES, PHASE_VI), (size, SIZES, SIZE_VI)]
+            [(phase, PHASES, PHASE_LABEL), (size, SIZES, SIZE_LABEL)]
         ):
             ax = axes[row, col]
             sub = table[table["h"] == h].set_index("model")
@@ -157,14 +157,14 @@ def fig_conditions(phase: pd.DataFrame, size: pd.DataFrame) -> None:
                     edgecolor=PAPER,
                     label=LABEL[model],
                 )
-            ax.set(xticks=range(3), title=f"Tầm {HORIZON_DAYS[h]} ngày")
+            ax.set(xticks=range(3), title=f"Horizon {HORIZON_DAYS[h]} days")
             ax.set_xticklabels([names[g] for g in groups])
             if col == 0:
                 ax.set_ylabel("RMSE (km²)")
     axes[0, 0].legend(fontsize=8, ncols=2)
     fig.suptitle(
-        "Hàng trên: theo giai đoạn lũ (ngày đích). Hàng dưới: theo cỡ lũ của mùa test (tam phân vị đỉnh). "
-        "Chỉ để mô tả, không kiểm định.",
+        "Top row: by flood phase (target day). Bottom row: by test-season flood size (peak tertiles). "
+        "Descriptive only, not tested.",
         fontsize=10,
         color=MUTED,
     )
@@ -178,7 +178,7 @@ def fig_example_seasons(pred: pd.DataFrame, seasons: pd.DataFrame, h: int = 2) -
     for ax, season in zip(axes, chosen):
         part = pred[(pred["season"] == season) & (pred["h"] == h)]
         obs = part.drop_duplicates("doy_target").sort_values("doy_target")
-        ax.plot(obs["doy_target"], obs["y_target"], color=INK, lw=3.2, label="Quan sát")
+        ax.plot(obs["doy_target"], obs["y_target"], color=INK, lw=3.2, label="Observed")
         for model in MAIN:
             color, ls, marker = STYLE[model]
             m = part[part["model"] == model].sort_values("doy_target")
@@ -190,14 +190,14 @@ def fig_example_seasons(pred: pd.DataFrame, seasons: pd.DataFrame, h: int = 2) -
                 lw=1.8,
                 label=LABEL[model],
             )
-        kind = "đỉnh cao nhất" if season == chosen[0] else "đỉnh thấp nhất"
+        kind = "highest peak" if season == chosen[0] else "lowest peak"
         ax.set(
-            title=f"Mùa {season} ({kind} trong 11 mùa test)",
-            xlabel="Ngày được dự báo (ngày trong năm)",
+            title=f"Season {season} ({kind} among 11 test seasons)",
+            xlabel="Forecast target day (day of year)",
         )
-    axes[0].set_ylabel("Diện tích ngập (km²)")
+    axes[0].set_ylabel("Flooded area (km²)")
     axes[0].legend(fontsize=8)
-    fig.suptitle(f"Dự báo trước {HORIZON_DAYS[h]} ngày", fontsize=10, color=MUTED)
+    fig.suptitle(f"{HORIZON_DAYS[h]}-day-ahead forecast", fontsize=10, color=MUTED)
     save(fig, "example_seasons.png")
 
 

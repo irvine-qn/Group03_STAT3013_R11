@@ -44,5 +44,5 @@ def load_flood_matrix(config: dict, csv_path: Path | None = None) -> np.ndarray:
     is_missing = wide.isna().stack()
     missing = is_missing[is_missing].index.tolist()
     if missing:
-        raise ValueError(f"thiếu dữ liệu (mùa, bước): {missing[:5]}")
+        raise ValueError(f"missing data (season, step): {missing[:5]}")
     return wide.to_numpy(dtype=float)

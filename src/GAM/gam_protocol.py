@@ -51,7 +51,7 @@ def build_rows(Y: np.ndarray, region: Region, season_idx, h: int) -> pd.DataFram
     records = []
     for i in season_idx:
         if i < MIN_PRIOR:
-            raise ValueError(f"mùa thứ {i} có ít hơn {MIN_PRIOR} mùa trước")
+            raise ValueError(f"season {i} has fewer than {MIN_PRIOR} prior seasons")
         c = climatology(Y, i)
         for t in range(FIRST_ORIGIN, n - h + 1):
             o = t - 1  # cột của bước gốc

@@ -61,7 +61,7 @@ def run(Y: np.ndarray, cfg, windows=((None, ""), (WINDOW, "_w7"))) -> dict[str, 
                 coefs.append({**key, **coefficients(fit.model)})
                 curves.append(pd.DataFrame({**key, "doy": DOY_GRID,
                                             "beta0_plus_s": seasonal_curve(fit.model, DOY_GRID)}))
-            print(f"  fold {fold.test_season}{suffix or ' (đủ mùa)'}: {time.time() - t0:.1f}s", flush=True)
+            print(f"  fold {fold.test_season}{suffix or ' (all seasons)'}: {time.time() - t0:.1f}s", flush=True)
     return {"predictions": pd.concat(preds, ignore_index=True), "configs": pd.DataFrame(configs),
             "coefficients": pd.DataFrame(coefs), "curves": pd.concat(curves, ignore_index=True)}
 
@@ -94,14 +94,14 @@ def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")
     ensure_dirs()
     cfg, Y = load_data()
-    print("Chạy GAM trên 11 fold x 3 tầm, đủ mùa và 7 mùa ...")
+    print("Running GAM on 11 folds x 3 horizons, all seasons and 7 seasons ...")
     res = run(Y, cfg)
     res["predictions"][COLUMNS].to_csv(TABLES / "predictions.csv", index=False)
     res["configs"].to_csv(TABLES / "gam_chosen_configs.csv", index=False)
     res["coefficients"].to_csv(TABLES / "gam_coefficients.csv", index=False)
     res["curves"].to_csv(TABLES / "gam_seasonal_curve.csv", index=False)
 
-    print("\nPhần phụ: thí nghiệm bóc tách ...")
+    print("\nSupplementary: ablation experiment ...")
     ablation_variants(Y, cfg).to_csv(TABLES / "gam_ablation_predictions.csv", index=False)
     print(f"Xong -> {TABLES}")
 
