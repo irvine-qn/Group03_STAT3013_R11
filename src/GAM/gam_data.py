@@ -57,5 +57,5 @@ def load_flood_matrix(region: Region) -> np.ndarray:
     wide = wide.reindex(index=list(region.seasons), columns=range(1, region.n_steps + 1))
     missing = wide.isna().stack()
     if missing.any():
-        raise ValueError(f"thiếu dữ liệu (mùa, bước): {missing[missing].index.tolist()[:5]}")
+        raise ValueError(f"missing data (season, step): {missing[missing].index.tolist()[:5]}")
     return wide.to_numpy(dtype=float)

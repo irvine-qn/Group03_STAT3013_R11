@@ -210,7 +210,7 @@ def main() -> None:
     for name, t in tables.items():
         t.to_csv(TABLES / f"{name}.csv", index=False)
         print(f"\n== {name}\n{t.round(3).to_string(index=False)}")
-    print(f"\nφ gộp (dùng cho ACF lý thuyết) = {phi:.3f}")
+    print(f"\npooled φ (used for theoretical ACF) = {phi:.3f}")
 
 
 if __name__ == "__main__":

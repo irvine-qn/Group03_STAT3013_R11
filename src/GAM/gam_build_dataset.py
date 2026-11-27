@@ -67,7 +67,7 @@ def main() -> None:
     table.to_csv(DATASET / "gam_rows.csv", index=False)
     summ = summary(table, Y)
     summ.to_csv(DATASET / "dataset_summary.csv", index=False)
-    print(f"Y: {Y.shape[0]} mùa x {Y.shape[1]} bước; {len(table)} dòng -> {DATASET / 'gam_rows.csv'}")
+    print(f"Y: {Y.shape[0]} seasons x {Y.shape[1]} steps; {len(table)} rows -> {DATASET / 'gam_rows.csv'}")
     print(summ.round(3).to_string(index=False))
 
 
