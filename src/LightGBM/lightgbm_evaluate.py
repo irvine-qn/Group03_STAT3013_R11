@@ -31,7 +31,7 @@ MODEL_ORDER = ["anom_ar1", "lgbm_raw", "lgbm_anomaly", "lgbm_noclim"]
 
 def load_predictions(path: Path = TABLES / "predictions.csv") -> pd.DataFrame:
     if not Path(path).exists():
-        raise FileNotFoundError(f"không thấy {path}; hãy chạy lightgbm_forecast.py trước")
+        raise FileNotFoundError(f"{path} not found; run lightgbm_forecast.py first")
     return pd.read_csv(path)
 
 
@@ -176,10 +176,10 @@ def main() -> None:
     by_phase.to_csv(TABLES / "rmse_by_phase.csv", index=False)
     by_size.to_csv(TABLES / "rmse_by_size.csv", index=False)
 
-    print("RMSE (km², cột = tầm h):\n", rmse.round(0).to_string(), "\n")
-    print("So với AnomAR1 (cấp mùa):\n", tests.round(4).to_string(index=False), "\n")
-    print("Theo giai đoạn lũ:\n", by_phase.to_string(index=False), "\n")
-    print("Theo cỡ lũ:\n", by_size.to_string(index=False))
+    print("RMSE (km², column = horizon h):\n", rmse.round(0).to_string(), "\n")
+    print("Vs AnomAR1 (season level):\n", tests.round(4).to_string(index=False), "\n")
+    print("By flood phase:\n", by_phase.to_string(index=False), "\n")
+    print("By flood size:\n", by_size.to_string(index=False))
 
 
 if __name__ == "__main__":

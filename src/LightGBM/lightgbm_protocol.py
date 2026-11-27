@@ -44,7 +44,7 @@ def rolling_origin(config: dict, first_test: int = FIRST_TEST, last_test: int = 
 def climatology(Y: np.ndarray, season_idx: int) -> np.ndarray:
     """Mức bình thường theo từng bước: trung bình tối đa 5 mùa liền trước mùa season_idx."""
     if season_idx < MIN_PRIOR:
-        raise ValueError(f"mùa thứ {season_idx} có ít hơn {MIN_PRIOR} mùa trước")
+        raise ValueError(f"season {season_idx} has fewer than {MIN_PRIOR} prior seasons")
     return Y[max(0, season_idx - N_PRIOR):season_idx].mean(axis=0)
 
 

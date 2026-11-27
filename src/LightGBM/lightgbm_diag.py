@@ -382,16 +382,16 @@ def fixed_config_models() -> dict:
     m = {}
     # Các cấu hình Random Forest trong lưới của nhóm
     for i, (d, leaf, mf) in enumerate(RF_GRID):
-        m[f"RF lưới {i}: depth={d}, leaf={leaf}, max_features={mf}"] = ("RF (lưới nhóm)", rf(d, leaf, mf))
+        m[f"RF grid {i}: depth={d}, leaf={leaf}, max_features={mf}"] = ("RF (group grid)", rf(d, leaf, mf))
     # Thêm hai Random Forest nông (ngoài lưới) để xem cây nông có giúp không
-    m["RF depth=2, leaf=5"] = ("RF (thêm, nông)", rf(2, 5, 1.0))
-    m["RF depth=3, leaf=5"] = ("RF (thêm, nông)", rf(3, 5, 1.0))
+    m["RF depth=2, leaf=5"] = ("RF (extra, shallow)", rf(2, 5, 1.0))
+    m["RF depth=3, leaf=5"] = ("RF (extra, shallow)", rf(3, 5, 1.0))
     # Các cấu hình LightGBM trong lưới của nhóm
     for i, (a, b, c) in enumerate(LGBM_GRID):
-        m[f"LightGBM lưới {i}: leaves={a}, n={b}, lr={c}"] = ("LightGBM (lưới nhóm)", gbm(a, b, c))
+        m[f"LightGBM grid {i}: leaves={a}, n={b}, lr={c}"] = ("LightGBM (group grid)", gbm(a, b, c))
     # Thêm hai LightGBM sâu (31 lá, min_child_samples=5) ngoài lưới để xem mô hình phức tạp hơn có khác không
-    m["LightGBM sâu: leaves=31, n=300, lr=0.05, mcs=5"] = ("LightGBM (thêm, sâu)", gbm(31, 300, 0.05, 5))
-    m["LightGBM sâu: leaves=31, n=100, lr=0.3, mcs=5"] = ("LightGBM (thêm, sâu)", gbm(31, 100, 0.3, 5))
+    m["LightGBM deep: leaves=31, n=300, lr=0.05, mcs=5"] = ("LightGBM (extra, deep)", gbm(31, 300, 0.05, 5))
+    m["LightGBM deep: leaves=31, n=100, lr=0.3, mcs=5"] = ("LightGBM (extra, deep)", gbm(31, 100, 0.3, 5))
     return m
 
 
@@ -478,7 +478,7 @@ def plot_seasons(pred: pd.DataFrame, seasons, path, models=SEASON_MODELS) -> Non
             # Bảng thực tế và dự báo của mùa/tầm này
             w = season_forecasts(pred, season, h, models)
             # Đường giá trị thực: đen, nét dày
-            ax.plot(w["doy_target"], w["y_target"], color="black", lw=2, label="Thực tế")
+            ax.plot(w["doy_target"], w["y_target"], color="black", lw=2, label="Actual")
             # Vẽ đường dự báo của từng mô hình
             for m in models:
                 # Lấy nhãn, màu, kiểu nét của mô hình
@@ -487,12 +487,12 @@ def plot_seasons(pred: pd.DataFrame, seasons, path, models=SEASON_MODELS) -> Non
             # RMSE của từng mô hình trên riêng mùa/tầm này, để ghi trong tiêu đề
             rm = {m: float(np.sqrt(np.mean((w[m] - w["y_target"]) ** 2))) for m in models}
             # Tiêu đề: mùa, tầm tính theo ngày (h bước x 8 ngày), RMSE của LightGBM và AnomAR1
-            ax.set_title(f"Mùa {season}, tầm {h * 8} ngày\nRMSE: LightGBM {rm['lgbm_raw']:,.0f}"
+            ax.set_title(f"Season {season}, horizon {h * 8} days\nRMSE: LightGBM {rm['lgbm_raw']:,.0f}"
                          f" | AnomAR1 {rm['anom_ar1']:,.0f}", fontsize=10)
             # Nhãn trục x
-            ax.set_xlabel("Ngày trong năm của bước đích")
+            ax.set_xlabel("Day of year of target step")
             # Nhãn trục y
-            ax.set_ylabel("Diện tích ngập (km²)")
+            ax.set_ylabel("Flooded area (km²)")
             # Chỉ vẽ chú giải ở ô đầu tiên để khỏi lặp lại
             if i == 0 and j == 0:
                 ax.legend(fontsize=8)
@@ -536,7 +536,7 @@ def make_figures(tables: dict, out_dir) -> list:
         # Biểu đồ thanh ngang
         ax.barh(s.index, s.values, color="#4C78A8")
         ax.set_title(f"{name} (h = 2)")
-        ax.set_xlabel("SHAP trung bình tuyệt đối (km²)")
+        ax.set_xlabel("Mean absolute SHAP (km²)")
     fig.tight_layout()
     saved.append(_save(fig, out_dir / "shap_h2.png"))
 
@@ -554,7 +554,7 @@ def make_figures(tables: dict, out_dir) -> list:
         ax.boxplot(data, tick_labels=[f"lgbm_{v}" for v in VARIANTS])
         # Đường ngang đứt nét: RMSE của AnomAR1 (nếu hộp nằm dưới đường này thì LightGBM tốt hơn)
         ax.axhline(base[("lgbm_raw", h)], color="#E45756", ls="--", label="anom_ar1")
-        ax.set_title(f"Tầm {h * 8} ngày")
+        ax.set_title(f"Horizon {h * 8} days")
         ax.set_ylabel("RMSE (km²)")
         ax.legend()
         # Xoay nhãn trục x 20 độ cho khỏi chồng chữ
@@ -587,7 +587,7 @@ def load_official() -> pd.DataFrame:
     """Dự báo chính thức (seed 0) của lightgbm_forecast.py; báo lỗi rõ ràng nếu chưa chạy."""
     path = TABLES / "predictions.csv"
     if not path.exists():
-        raise FileNotFoundError(f"không thấy {path}; hãy chạy lightgbm_forecast.py trước")
+        raise FileNotFoundError(f"{path} not found; run lightgbm_forecast.py first")
     return pd.read_csv(path)
 
 
@@ -616,7 +616,7 @@ def main(region: str = "mekong", n_seeds: int = 10) -> None:
     phase.to_csv(TABLES / "lightgbm_phase_by_season_h2.csv", index=False)
 
     # In bảng độ ổn định theo seed ra màn hình
-    print("\nRMSE theo seed (km², cột rmse_*), so với anom_ar1:\n", summary.to_string(index=False))
+    print("\nRMSE by seed (km², rmse_* columns), vs anom_ar1:\n", summary.to_string(index=False))
     # In mức tập trung của lợi thế: lợi thế có đều giữa các mùa hay chỉ do vài mùa, cho từng giai đoạn lũ
     for name in ("rising", "peak", "falling"):
         print("\n", gain_concentration(phase, name))
@@ -624,7 +624,7 @@ def main(region: str = "mekong", n_seeds: int = 10) -> None:
     figs = make_figures({"importance": imps, "seed_predictions": preds, "baseline_rmse": base,
                          "phase_by_season": phase}, FIGURES)
     # In đường dẫn các hình, mỗi hình một dòng (sep="\n  " xuống dòng và thụt 2 khoảng trắng)
-    print("\nHình:", *[str(f) for f in figs], sep="\n  ")
+    print("\nFigures:", *[str(f) for f in figs], sep="\n  ")
 
 
 def main_extras(region: str = "mekong") -> None:
@@ -643,12 +643,12 @@ def main_extras(region: str = "mekong") -> None:
     summ = permutation_summary(perm).round(3)
     summ.to_csv(TABLES / "lightgbm_permutation_summary.csv", index=False)
     # In bảng tóm tắt theo nhóm đặc trưng
-    print("Permutation importance (nhóm, tăng RMSE km² qua 11 mùa test):\n",
+    print("Permutation importance (groups, RMSE increase in km² over 11 test seasons):\n",
           summ[summ["kind"] == "group"].to_string(index=False))
     # Thí nghiệm đối chứng: LightGBM và Random Forest với cấu hình cố định ở tầm 16 ngày
     fixed = fixed_config_table(Y, config, h=2).round(1)
     fixed.to_csv(TABLES / "lightgbm_vs_rf_fixed_configs_h2.csv", index=False)
-    print("\nCấu hình cố định, cùng đặc trưng raw, h = 2 (chỉ để mô tả):\n", fixed.to_string(index=False))
+    print("\nFixed configs, same raw features, h = 2 (descriptive only):\n", fixed.to_string(index=False))
 
 
 def main_seasons(region: str = "mekong", seasons=(2011, 2015)) -> None:
@@ -675,7 +675,7 @@ def main_seasons(region: str = "mekong", seasons=(2011, 2015)) -> None:
     out.parent.mkdir(parents=True, exist_ok=True)
     # Vẽ hình so sánh thực tế với dự báo của các mô hình cho các mùa được chọn
     plot_seasons(official, seasons, out)
-    print("Hình:", out)
+    print("Figures:", out)
 
 
 # Khối này chỉ chạy khi chạy trực tiếp file (python lightgbm_diag.py ...), không chạy khi bị import
