@@ -5,6 +5,7 @@ Chạy (sau khi cả 4 mô hình đã ghi predictions.csv):  python src/Comparis
 Ghi:  results/Comparison/tables/
         baseline_check.csv     cột anom_ar1 của mỗi thư mục lệch bao nhiêu so với thư mục AnomAR1
         rmse_all.csv           RMSE gộp của mọi mô hình × tầm, một bảng
+        r2_all.csv             R² gộp (1 − SSE/SST trên cùng các dòng) của mọi mô hình × tầm
         vs_anom_ar1_all.csv    kiểm định cấp mùa so với AnomAR1, Holm trên TOÀN BỘ 9 phép so chính
         vs_anom_ar1_main.csv   chỉ họ chính (9 dòng), không làm tròn, có cả p Holm theo từng mô hình và theo họ chính
         rmse_by_phase.csv      RMSE theo giai đoạn lũ, 4 bản chính × 3 tầm
@@ -18,6 +19,7 @@ Vì sao cần Holm toàn cục: mỗi mô hình chỉ hiệu chỉnh trong các 
 (GAM, LightGBM thô, Chronos-2) cạnh nhau ở 3 tầm, nhóm thực hiện 9 phép so với AnomAR1, nên p phải hiệu
 chỉnh trên cả 9. Các biến thể và mốc đơn giản vẫn có p thô, nhưng không vào họ hiệu chỉnh này.
 """
+
 from __future__ import annotations
 
 import sys
@@ -46,13 +48,24 @@ SOURCES = {
     "LightGBM": ["lgbm_raw", "lgbm_anomaly", "lgbm_noclim"],
     "Chronos-2": ["chronos2"],
 }
-MAIN = [BASELINE, "gam", "lgbm_raw", "chronos2"]  # bản chính của mỗi thành viên, khai báo trước
+MAIN = [
+    BASELINE,
+    "gam",
+    "lgbm_raw",
+    "chronos2",
+]  # bản chính của mỗi thành viên, khai báo trước
 CONTENDERS = MAIN[1:]
 ROLE = {
     "anom_ar1": "baseline",
-    "gam": "main", "lgbm_raw": "main", "chronos2": "main",
-    "anom_ar1_w7": "variant", "gam_w7": "variant", "lgbm_anomaly": "variant", "lgbm_noclim": "variant",
-    "clim5": "simple", "persistence": "simple",
+    "gam": "main",
+    "lgbm_raw": "main",
+    "chronos2": "main",
+    "anom_ar1_w7": "variant",
+    "gam_w7": "variant",
+    "lgbm_anomaly": "variant",
+    "lgbm_noclim": "variant",
+    "clim5": "simple",
+    "persistence": "simple",
 }
 ORDER = list(ROLE)  # thứ tự dòng: mốc, 3 bản chính, biến thể, mốc đơn giản
 PHASE_EDGES, PHASES = [0, 257, 298, 999], ["rising", "peak", "falling"]
@@ -62,23 +75,43 @@ BASELINE_TOL = 1e-6  # km²; lệch lớn hơn nghĩa là các thư mục không
 
 # ---------- Đọc dữ liệu ----------
 
+
 def read_predictions(source: str, results: Path = RESULTS) -> pd.DataFrame:
     path = results / source / "tables" / "predictions.csv"
     if not path.exists():
-        raise FileNotFoundError(f"không thấy {path}; hãy chạy bước dự báo của {source} trước")
+        raise FileNotFoundError(
+            f"không thấy {path}; hãy chạy bước dự báo của {source} trước"
+        )
     return pd.read_csv(path)[COLUMNS]
 
 
 def baseline_check(results: Path = RESULTS) -> pd.DataFrame:
     """So cột anom_ar1 của từng thư mục với thư mục AnomAR1: cùng số dòng và cùng giá trị."""
     key = ["season", "t", "h"]
-    ref = read_predictions("AnomAR1", results).query("model == @BASELINE").set_index(key).sort_index()
+    ref = (
+        read_predictions("AnomAR1", results)
+        .query("model == @BASELINE")
+        .set_index(key)
+        .sort_index()
+    )
     rows = []
     for source in SOURCES:
-        own = read_predictions(source, results).query("model == @BASELINE").set_index(key).sort_index()
+        own = (
+            read_predictions(source, results)
+            .query("model == @BASELINE")
+            .set_index(key)
+            .sort_index()
+        )
         same_rows = own.index.equals(ref.index)
         diff = (own["pred"] - ref["pred"]).abs().max() if same_rows else np.inf
-        rows.append({"source": source, "n_rows": len(own), "same_rows": same_rows, "max_abs_diff": float(diff)})
+        rows.append(
+            {
+                "source": source,
+                "n_rows": len(own),
+                "same_rows": same_rows,
+                "max_abs_diff": float(diff),
+            }
+        )
     return pd.DataFrame(rows)
 
 
@@ -87,7 +120,9 @@ def load_all(results: Path = RESULTS) -> pd.DataFrame:
     check = baseline_check(results)
     bad = check[~check["same_rows"] | (check["max_abs_diff"] > BASELINE_TOL)]
     if len(bad):
-        raise ValueError(f"cột anom_ar1 không khớp giữa các thư mục:\n{bad.to_string(index=False)}")
+        raise ValueError(
+            f"cột anom_ar1 không khớp giữa các thư mục:\n{bad.to_string(index=False)}"
+        )
     parts = []
     for source, models in SOURCES.items():
         pred = read_predictions(source, results)
@@ -96,6 +131,7 @@ def load_all(results: Path = RESULTS) -> pd.DataFrame:
 
 
 # ---------- Thước đo sai số ----------
+
 
 def pooled_rmse(pred: pd.DataFrame, by: list[str]) -> pd.DataFrame:
     """RMSE gộp mọi dòng trong từng nhóm `by`."""
@@ -112,12 +148,19 @@ def season_mse(pred: pd.DataFrame) -> pd.DataFrame:
 
 def _sort_models(frame: pd.DataFrame, by: list[str]) -> pd.DataFrame:
     rank = frame["model"].map({m: k for k, m in enumerate(ORDER)}).fillna(len(ORDER))
-    return frame.assign(_rank=rank).sort_values(by + ["_rank"]).drop(columns="_rank").reset_index(drop=True)
+    return (
+        frame.assign(_rank=rank)
+        .sort_values(by + ["_rank"])
+        .drop(columns="_rank")
+        .reset_index(drop=True)
+    )
 
 
 def rmse_all(pred: pd.DataFrame) -> pd.DataFrame:
     """Một bảng RMSE: dòng = mô hình (kèm thư mục nguồn và vai trò), cột = tầm h."""
-    wide = pooled_rmse(pred, ["model", "h"]).pivot(index="model", columns="h", values="rmse")
+    wide = pooled_rmse(pred, ["model", "h"]).pivot(
+        index="model", columns="h", values="rmse"
+    )
     wide.columns = [str(h) for h in wide.columns]
     source = pred.drop_duplicates("model").set_index("model")["source"]
     out = wide.assign(source=source, role=wide.index.map(ROLE)).reset_index()
@@ -125,7 +168,35 @@ def rmse_all(pred: pd.DataFrame) -> pd.DataFrame:
     return out[["model", "source", "role"] + [str(h) for h in HORIZONS]]
 
 
+def r2_all(pred: pd.DataFrame) -> pd.DataFrame:
+    """R² gộp = 1 − SSE/SST, cùng dạng rmse_all. SST tính quanh trung bình y_target của mỗi tầm,
+    nên mọi mô hình ở cùng tầm có chung mẫu số (cùng 748/3 dòng) và so được với nhau."""
+    sst = (
+        pred.drop_duplicates(["season", "t", "h"])
+        .groupby("h")["y_target"]
+        .agg(lambda y: ((y - y.mean()) ** 2).sum())
+    )
+    sse = (
+        pred.assign(sq=(pred["y_target"] - pred["pred"]) ** 2)
+        .groupby(["model", "h"])["sq"]
+        .sum()
+    )
+    r2 = (
+        (1 - sse / sse.index.get_level_values("h").map(sst).to_numpy())
+        .rename("r2")
+        .reset_index()
+    )
+    wide = r2.pivot(index="model", columns="h", values="r2")
+    wide.columns = [str(h) for h in wide.columns]
+    source = pred.drop_duplicates("model").set_index("model")["source"]
+    out = _sort_models(
+        wide.assign(source=source, role=wide.index.map(ROLE)).reset_index(), []
+    )
+    return out[["model", "source", "role"] + [str(h) for h in HORIZONS]]
+
+
 # ---------- Kiểm định cấp mùa ----------
+
 
 def holm(p_values) -> np.ndarray:
     """Hiệu chỉnh Holm–Bonferroni: p nhỏ nhất nhân m, p kế tiếp nhân m − 1, ..., giữ đơn điệu."""
@@ -168,27 +239,37 @@ def _wilcoxon_p(m: np.ndarray, b: np.ndarray) -> float:
         return float("nan")
 
 
-def compare_with_anom_ar1(pred: pd.DataFrame, margin: float = TOST_MARGIN) -> pd.DataFrame:
+def compare_with_anom_ar1(
+    pred: pd.DataFrame, margin: float = TOST_MARGIN
+) -> pd.DataFrame:
     """So mọi mô hình với AnomAR1 ở từng tầm, trên MSE của 11 mùa.
 
     Cột giống vs_anom_ar1.csv của từng mô hình, trừ phần Holm:
       p_t_holm_main  Holm trên 9 phép so của 3 bản chính × 3 tầm (để trống cho biến thể và mốc đơn giản).
     """
-    wide = season_mse(pred).pivot_table(index=["h", "season"], columns="model", values="mse")
+    wide = season_mse(pred).pivot_table(
+        index=["h", "season"], columns="model", values="mse"
+    )
     source = pred.drop_duplicates("model").set_index("model")["source"]
     rows = []
     for model in [m for m in ORDER if m in wide.columns and m != BASELINE]:
         for h in HORIZONS:
             m, b = wide.loc[h, model].to_numpy(), wide.loc[h, BASELINE].to_numpy()
-            rows.append({
-                "model": model, "source": source[model], "role": ROLE[model], "h": h, "n_seasons": len(m),
-                "rmse_ratio": float(np.sqrt(m.mean() / b.mean())),
-                "wins": int((m < b).sum()),
-                **_relative_mse_diff(m, b),
-                "p_t": float(stats.ttest_rel(m, b).pvalue),
-                "p_wilcoxon": _wilcoxon_p(m, b),
-                "p_tost": _tost_p(m, b, margin),
-            })
+            rows.append(
+                {
+                    "model": model,
+                    "source": source[model],
+                    "role": ROLE[model],
+                    "h": h,
+                    "n_seasons": len(m),
+                    "rmse_ratio": float(np.sqrt(m.mean() / b.mean())),
+                    "wins": int((m < b).sum()),
+                    **_relative_mse_diff(m, b),
+                    "p_t": float(stats.ttest_rel(m, b).pvalue),
+                    "p_wilcoxon": _wilcoxon_p(m, b),
+                    "p_tost": _tost_p(m, b, margin),
+                }
+            )
     out = pd.DataFrame(rows)
     main = out["role"] == "main"
     out["p_t_holm_main"] = np.nan
@@ -198,7 +279,12 @@ def compare_with_anom_ar1(pred: pd.DataFrame, margin: float = TOST_MARGIN) -> pd
 
 def model_families(results: Path = RESULTS) -> dict[str, list[str]]:
     """Họ Holm của từng thư mục = các mô hình có trong vs_anom_ar1.csv của thư mục đó."""
-    return {s: list(pd.read_csv(results / s / "tables" / "vs_anom_ar1.csv")["model"].unique()) for s in SOURCES}
+    return {
+        s: list(
+            pd.read_csv(results / s / "tables" / "vs_anom_ar1.csv")["model"].unique()
+        )
+        for s in SOURCES
+    }
 
 
 def main_family(pred: pd.DataFrame, results: Path = RESULTS) -> pd.DataFrame:
@@ -215,18 +301,38 @@ def main_family(pred: pd.DataFrame, results: Path = RESULTS) -> pd.DataFrame:
         full.loc[rows, "p_t_holm_model"] = holm(full.loc[rows, "p_t"].to_numpy())
     main = full[full["role"] == "main"].copy()
     main["model"] = pd.Categorical(main["model"], CONTENDERS, ordered=True)
-    main = main.sort_values(["model", "h"]).astype({"model": str}).reset_index(drop=True)
-    return main[["model", "h", "n_seasons", "rmse_ratio", "wins", "mse_diff_pct", "mse_diff_pct_ci_low",
-                 "mse_diff_pct_ci_high", "p_t", "p_wilcoxon", "p_tost", "p_t_holm_model", "p_t_holm_main"]]
+    main = (
+        main.sort_values(["model", "h"]).astype({"model": str}).reset_index(drop=True)
+    )
+    return main[
+        [
+            "model",
+            "h",
+            "n_seasons",
+            "rmse_ratio",
+            "wins",
+            "mse_diff_pct",
+            "mse_diff_pct_ci_low",
+            "mse_diff_pct_ci_high",
+            "p_t",
+            "p_wilcoxon",
+            "p_tost",
+            "p_t_holm_model",
+            "p_t_holm_main",
+        ]
+    ]
 
 
 # ---------- Theo điều kiện và theo mùa ----------
+
 
 def label_conditions(pred: pd.DataFrame) -> pd.DataFrame:
     """Gắn giai đoạn lũ (theo ngày đích) và cỡ lũ (tam phân vị đỉnh của mùa test) cho mỗi dòng."""
     size = pd.qcut(pred.groupby("season")["y_target"].max(), 3, labels=SIZES)
     return pred.assign(
-        phase=pd.cut(pred["doy_target"], PHASE_EDGES, right=False, labels=PHASES).astype(str),
+        phase=pd.cut(
+            pred["doy_target"], PHASE_EDGES, right=False, labels=PHASES
+        ).astype(str),
         size=pred["season"].map(size).astype(str),
     )
 
@@ -234,9 +340,12 @@ def label_conditions(pred: pd.DataFrame) -> pd.DataFrame:
 def condition_table(pred: pd.DataFrame, by: str) -> pd.DataFrame:
     """Cùng dạng rmse_by_phase.csv / rmse_by_size.csv của từng mô hình: cột h, model rồi các nhóm."""
     groups = PHASES if by == "phase" else SIZES
-    table = (pooled_rmse(label_conditions(pred), ["h", "model", by])
-             .pivot(index=["h", "model"], columns=by, values="rmse")
-             .reindex(columns=groups).reset_index())
+    table = (
+        pooled_rmse(label_conditions(pred), ["h", "model", by])
+        .pivot(index=["h", "model"], columns=by, values="rmse")
+        .reindex(columns=groups)
+        .reset_index()
+    )
     table.columns.name = None
     return _sort_models(table, ["h"])
 
@@ -245,11 +354,15 @@ def season_table(pred: pd.DataFrame) -> pd.DataFrame:
     """RMSE từng (tầm, mùa, mô hình), đỉnh và cỡ lũ của mùa, tỉ lệ so với AnomAR1 cùng mùa."""
     per = pooled_rmse(label_conditions(pred), ["h", "season", "size", "model"])
     base = per[per["model"] == BASELINE].set_index(["h", "season"])["rmse"]
-    per["ratio_vs_anom_ar1"] = per["rmse"] / per.set_index(["h", "season"]).index.map(base)
+    per["ratio_vs_anom_ar1"] = per["rmse"] / per.set_index(["h", "season"]).index.map(
+        base
+    )
     peak = pred.groupby("season")["y_target"].max().rename("peak_km2")
     per = per.join(peak, on="season")
     per = _sort_models(per, ["h", "season"])
-    return per[["h", "season", "peak_km2", "size", "model", "rmse", "ratio_vs_anom_ar1"]]
+    return per[
+        ["h", "season", "peak_km2", "size", "model", "rmse", "ratio_vs_anom_ar1"]
+    ]
 
 
 def build_tables(pred: pd.DataFrame, check: pd.DataFrame) -> dict[str, pd.DataFrame]:
@@ -257,10 +370,13 @@ def build_tables(pred: pd.DataFrame, check: pd.DataFrame) -> dict[str, pd.DataFr
     return {
         "baseline_check": check,
         "rmse_all": rmse_all(pred).round(0),
+        "r2_all": r2_all(pred).round(4),
         "vs_anom_ar1_all": compare_with_anom_ar1(pred).round(4),
         "rmse_by_phase": condition_table(main, "phase").round(0),
         "rmse_by_size": condition_table(main, "size").round(0),
-        "season_rmse": season_table(main).round({"peak_km2": 0, "rmse": 0, "ratio_vs_anom_ar1": 4}),
+        "season_rmse": season_table(main).round(
+            {"peak_km2": 0, "rmse": 0, "ratio_vs_anom_ar1": 4}
+        ),
     }
 
 
@@ -272,9 +388,18 @@ def main() -> None:
     for name, table in tables.items():
         table.to_csv(TABLES / f"{name}.csv", index=False)
     family = main_family(pred)
-    family.to_csv(TABLES / "vs_anom_ar1_main.csv", index=False)  # không làm tròn: video và báo cáo trích từ đây
+    family.to_csv(
+        TABLES / "vs_anom_ar1_main.csv", index=False
+    )  # không làm tròn: video và báo cáo trích từ đây
     with pd.option_context("display.width", 200, "display.max_columns", 20):
-        for name in ["baseline_check", "rmse_all", "vs_anom_ar1_all", "rmse_by_phase", "rmse_by_size"]:
+        for name in [
+            "baseline_check",
+            "rmse_all",
+            "r2_all",
+            "vs_anom_ar1_all",
+            "rmse_by_phase",
+            "rmse_by_size",
+        ]:
             print(f"\n== {name}\n{tables[name].to_string(index=False)}")
 
 
