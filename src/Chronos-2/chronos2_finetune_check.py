@@ -53,7 +53,7 @@ def finetuned_predictions(Y, config: dict, base, name: str, settings: dict) -> p
             tuned = base.fit(series, prediction_length=max(HORIZONS), batch_size=32,
                              output_dir=checkpoint_dir, remove_printer_callback=True, **settings)
             rows += chronos_season(Y, config, Chronos2ZeroShot(tuned), test_season)
-            print(f"  {name} mùa {test_season}: xong", flush=True)
+            print(f"  {name} season {test_season}: done", flush=True)
     return pd.DataFrame(rows).assign(model=name)
 
 

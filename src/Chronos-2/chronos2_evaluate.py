@@ -48,7 +48,7 @@ MODEL_ORDER = ["anom_ar1", "chronos2"]
 
 def load_predictions(path: Path = PREDICTIONS_PATH) -> pd.DataFrame:
     if not Path(path).exists():
-        raise FileNotFoundError(f"không thấy {path}; hãy chạy chronos2_forecast.py trước")
+        raise FileNotFoundError(f"{path} not found; run chronos2_forecast.py first")
     return pd.read_csv(path)
 
 
@@ -272,11 +272,11 @@ def main() -> None:
     plot_rmse_by_origin(by_origin, FIGURES / "rmse_by_origin.png")
     plot_example_seasons(pred, Y, config, FIGURES / "example_seasons.png")
 
-    print("RMSE (km², cột = tầm h):\n", rmse.round(0).to_string(), "\n")
-    print("So với AnomAR1 (cấp mùa):\n", tests.round(4).to_string(index=False), "\n")
-    print("Theo giai đoạn lũ:\n", by_phase.to_string(index=False), "\n")
-    print("Theo cỡ lũ:\n", by_size.to_string(index=False), "\n")
-    print("Đầu–giữa mùa và cuối mùa:\n", by_part.round(0).to_string())
+    print("RMSE (km², column = horizon h):\n", rmse.round(0).to_string(), "\n")
+    print("Vs AnomAR1 (season level):\n", tests.round(4).to_string(index=False), "\n")
+    print("By flood phase:\n", by_phase.to_string(index=False), "\n")
+    print("By flood size:\n", by_size.to_string(index=False), "\n")
+    print("Early–mid season vs late season:\n", by_part.round(0).to_string())
 
 
 if __name__ == "__main__":
