@@ -1,0 +1,5 @@
+source,n_rows,same_rows,max_abs_diff
+AnomAR1,748,True,0.0
+GAM,748,True,9.094947017729282e-13
+LightGBM,748,True,0.0
+Chronos-2,748,True,0.0
