@@ -32,6 +32,8 @@ results/{AnomAR1,GAM,LightGBM,Chronos-2}/tables/predictions.csv
 | `season_rmse.csv` | RMSE từng mùa test và tỉ lệ so với AnomAR1 cùng mùa |
 | `residual_tests_all.csv` | (`comparison_residuals.py`) phần dư từng (mô hình, tầm, mùa test) của `anom_ar1`, `gam`, `lgbm_raw`, `chronos2`: n, bias, ACF trễ 1–5, p Ljung–Box trễ 10 |
 | `residual_summary_all.csv` | (`comparison_residuals.py`) phần dư gộp theo (mô hình, tầm): bias, SD, xiên, nhọn dư, Shapiro–Wilk (chỉ tham khảo vì sai số tự tương quan), ACF1–3 trung bình, số và tỉ lệ mùa có Ljung–Box p < 0,05; hình `residual_diagnostics_all.png` |
+| `robustness_main.csv` | (`comparison_robustness.py`, phân tích độ vững, không thay kết quả chính) 9 phép so họ chính: CI 90% của trung bình d = ½·ln(MSE_m/MSE_b) theo t và theo bootstrap theo mùa (B = 10000, seed 0), CI 95% bootstrap và p bootstrap của chênh MSE, min/max p_tost, p_t, p Holm họ chính khi bỏ từng mùa, mùa ngoại lai |
+| `robustness_season_values.csv` | (`comparison_robustness.py`) 99 dòng: MSE từng mùa, d, chênh MSE, z, cờ ngoài 1,5·IQR, p khi bỏ mùa đó |
 | `paired_diff_normality.csv` | (`comparison_residuals.py`) Shapiro–Wilk trên 11 giá trị theo mùa mà kiểm định so sánh dùng: MSE_m − MSE_b (t ghép cặp), (MSE_m − MSE_b)/MSE_b (CI), ½·ln(MSE_m/MSE_b) (TOST) |
 
 Hình: `rmse_by_horizon.png`, `season_ratio.png`, `conditions.png`, `example_seasons.png`.
