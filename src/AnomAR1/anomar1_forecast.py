@@ -94,7 +94,7 @@ def main() -> None:
     phi.to_csv(TABLES / "phi_by_fold.csv", index=False)
     regression_table(Y, config).to_csv(TABLES / "regression_rows.csv", index=False)
 
-    print(f"{len(pred)} dự báo -> {(TABLES / 'predictions.csv').relative_to(REPO_ROOT)}")
+    print(f"{len(pred)} forecasts -> {(TABLES / 'predictions.csv').relative_to(REPO_ROOT)}")
     print("max |φ − statsmodels|:", float((phi["phi"] - phi["phi_statsmodels"]).abs().max()))
     print(phi[phi["model"] == "anom_ar1"].pivot(index="test_season", columns="h", values="phi")
           .round(4).to_string())

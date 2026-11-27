@@ -134,9 +134,9 @@ def main() -> None:
     peaks = pred.groupby("season")["y_target"].max()
     plot_seasons(pred, [int(peaks.idxmax()), int(peaks.idxmin())])
 
-    print("φ^h so với φ trực tiếp:\n", direct.round(3).to_string(index=False), "\n")
-    print("Phần dư:\n", summary.round(3).to_string())
-    print("Mùa test lũ lớn nhất / nhỏ nhất:", int(peaks.idxmax()), int(peaks.idxmin()))
+    print("φ^h vs direct φ:\n", direct.round(3).to_string(index=False), "\n")
+    print("Residuals:\n", summary.round(3).to_string())
+    print("Test seasons with largest / smallest flood:", int(peaks.idxmax()), int(peaks.idxmin()))
 
 
 if __name__ == "__main__":

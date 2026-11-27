@@ -33,7 +33,7 @@ SIZES = ["small", "medium", "large"]
 
 def load_predictions(path: Path = TABLES / "predictions.csv") -> pd.DataFrame:
     if not Path(path).exists():
-        raise FileNotFoundError(f"không thấy {path}; hãy chạy anomar1_forecast.py trước")
+        raise FileNotFoundError(f"{path} not found; run anomar1_forecast.py first")
     return pd.read_csv(path)
 
 
@@ -173,10 +173,10 @@ def main() -> None:
     phase.to_csv(TABLES / "rmse_by_phase.csv", index=False)
     size.to_csv(TABLES / "rmse_by_size.csv", index=False)
 
-    print("RMSE (km², cột = tầm h):\n", table.round(0).to_string(), "\n")
-    print("So với AnomAR1 (cấp mùa):\n", tests.round(4).to_string(index=False), "\n")
-    print("Theo giai đoạn lũ:\n", phase.to_string(index=False), "\n")
-    print("Theo cỡ lũ:\n", size.to_string(index=False))
+    print("RMSE (km², column = horizon h):\n", table.round(0).to_string(), "\n")
+    print("Vs AnomAR1 (season level):\n", tests.round(4).to_string(index=False), "\n")
+    print("By flood phase:\n", phase.to_string(index=False), "\n")
+    print("By flood size:\n", size.to_string(index=False))
 
 
 if __name__ == "__main__":
