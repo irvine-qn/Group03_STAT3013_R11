@@ -98,7 +98,13 @@ def rmse() -> pd.DataFrame:
 
 @st.cache_data
 def tests() -> pd.DataFrame:
-    return pd.concat([_read(d, "vs_anom_ar1") for d in MODEL_DIRS], ignore_index=True)
+    """Kiểm định của từng thư mục, kèm p Holm toàn cục (9 phép so) từ results/Comparison nếu đã chạy."""
+    own = pd.concat([_read(d, "vs_anom_ar1") for d in MODEL_DIRS], ignore_index=True)
+    path = REPO_ROOT / "results" / "Comparison" / "tables" / "vs_anom_ar1_all.csv"
+    if path.exists():
+        glob = pd.read_csv(path)[["model", "h", "p_t_holm_main"]]
+        own = own.merge(glob, on=["model", "h"], how="left")
+    return own
 
 
 @st.cache_data
@@ -147,8 +153,9 @@ with tab_sum:
     cols = st.columns(3)
     for col, model in zip(cols, ["gam", "lgbm_raw", "chronos2"]):
         rows = T[T["model"] == model].set_index("h")
+        p_holm = rows.loc[2, "p_t_holm_main"] if "p_t_holm_main" in rows else rows.loc[2, "p_t_holm"]
         col.metric(f"{label(model)} / AnomAR1, 16 ngày", f"{rows.loc[2, 'rmse_ratio']:.3f}",
-                   help=f"Thắng {int(rows.loc[2, 'wins'])}/11 mùa; p sau Holm = {rows.loc[2, 'p_t_holm']:.3f}; "
+                   help=f"Thắng {int(rows.loc[2, 'wins'])}/11 mùa; p sau Holm (9 phép so) = {p_holm:.3f}; "
                         f"TOST ±5%: p = {rows.loc[2, 'p_tost']:.3f}.")
     st.markdown("Tỉ lệ RMSE < 1 là tốt hơn AnomAR1. Bảng dưới: RMSE gộp (km²) của bản chính mỗi mô hình.")
     main = R.loc[MAIN_MODELS].rename(index=label, columns=lambda h: f"{HORIZON_DAYS[int(h)]} ngày")
@@ -179,7 +186,8 @@ with tab_test:
     st.dataframe(tt.drop(columns="h").rename(columns={"source": "thư mục"}), hide_index=True,
                  use_container_width=True)
     st.markdown("CI chứa 0 thì chưa phân biệt được. p TOST nhỏ là có bằng chứng tương đương trong ±5% RMSE. "
-                "\"Không bác bỏ\" không có nghĩa \"tương đương\". Holm hiệu chỉnh trong bảng của từng thư mục.")
+                "\"Không bác bỏ\" không có nghĩa \"tương đương\". `p_t_holm`: Holm trong bảng của từng thư mục; "
+                "`p_t_holm_main`: Holm trên 9 phép so của 3 bản chính × 3 tầm (results/Comparison).")
     ci = tt[tt["model"].isin([label(m) for m in MAIN_MODELS])]
     base = alt.Chart(ci)
     st.altair_chart(
