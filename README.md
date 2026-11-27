@@ -45,6 +45,22 @@ can be combined:
 
 Other tables in each folder are specific to that model.
 
+The cross-model table that the report and the video quote is
+`results/Comparison/tables/vs_anom_ar1_main.csv`: the 9 main comparisons, unrounded, with the columns of
+`vs_anom_ar1.csv` except that `p_t_holm` becomes `p_t_holm_model` (Holm within that model's folder) and
+`p_t_holm_main` (Holm over the main family) is added.
+
+### Multiple comparisons
+
+The **main family** is fixed in advance, not chosen from the results: each member's main model (`gam`,
+`lgbm_raw`, `chronos2`) against `anom_ar1` at h = 1, 2, 4, i.e. 9 comparisons. Holm is applied to their 9
+season-level paired t-test p-values (n = 11), recomputed from `predictions.csv` so nothing is rounded before
+the adjustment. This is `p_t_holm_main`.
+
+Variants (`anom_ar1_w7`, `gam_w7`, `lgbm_anomaly`, `lgbm_noclim`) and the simple baselines (`clim5`,
+`persistence`) are secondary analyses. They are not in the main family and keep the Holm adjustment within
+their own model folder (`p_t_holm` in `results/<Model>/tables/vs_anom_ar1.csv`).
+
 ### Comparison across models
 
 [`src/Comparison/`](src/Comparison/) reads the four `predictions.csv` files, checks that every folder uses the

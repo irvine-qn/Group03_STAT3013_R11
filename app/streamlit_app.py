@@ -103,7 +103,7 @@ def rmse() -> pd.DataFrame:
 def tests() -> pd.DataFrame:
     """Tests from each folder, plus the p-value adjusted over all 9 comparisons from results/Comparison if present."""
     own = pd.concat([_read(d, "vs_anom_ar1") for d in MODEL_DIRS], ignore_index=True)
-    path = REPO_ROOT / "results" / "Comparison" / "tables" / "vs_anom_ar1_all.csv"
+    path = REPO_ROOT / "results" / "Comparison" / "tables" / "vs_anom_ar1_main.csv"
     if path.exists():
         glob = pd.read_csv(path)[["model", "h", "p_t_holm_main"]]
         own = own.merge(glob, on=["model", "h"], how="left")
