@@ -80,7 +80,7 @@ def read_predictions(source: str, results: Path = RESULTS) -> pd.DataFrame:
     path = results / source / "tables" / "predictions.csv"
     if not path.exists():
         raise FileNotFoundError(
-            f"không thấy {path}; hãy chạy bước dự báo của {source} trước"
+            f"{path} not found; run the {source} forecast step first"
         )
     return pd.read_csv(path)[COLUMNS]
 
@@ -121,7 +121,7 @@ def load_all(results: Path = RESULTS) -> pd.DataFrame:
     bad = check[~check["same_rows"] | (check["max_abs_diff"] > BASELINE_TOL)]
     if len(bad):
         raise ValueError(
-            f"cột anom_ar1 không khớp giữa các thư mục:\n{bad.to_string(index=False)}"
+            f"anom_ar1 column does not match across folders:\n{bad.to_string(index=False)}"
         )
     parts = []
     for source, models in SOURCES.items():
