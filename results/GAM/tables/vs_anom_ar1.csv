@@ -1,0 +1,4 @@
+model,h,n_seasons,rmse_ratio,wins,mse_diff_pct,mse_diff_pct_ci_low,mse_diff_pct_ci_high,p_t,p_wilcoxon,p_tost,p_t_holm
+gam,1,11,1.0058,5,2.2118,-2.7918,7.2155,0.5076,0.7646,0.0017,1.0
+gam,2,11,0.9973,7,2.0291,-10.4721,14.5304,0.9137,0.6377,0.053,1.0
+gam,4,11,1.0006,7,9.405,-23.0392,41.8493,0.9896,0.7002,0.2526,1.0

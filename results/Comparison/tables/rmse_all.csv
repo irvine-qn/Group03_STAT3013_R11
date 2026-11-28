@@ -1,0 +1,11 @@
+model,source,role,1,2,4
+anom_ar1,AnomAR1,baseline,1090.0,1375.0,1687.0
+gam,GAM,main,1096.0,1372.0,1688.0
+lgbm_raw,LightGBM,main,1051.0,1284.0,1688.0
+chronos2,Chronos-2,main,1116.0,1412.0,1788.0
+anom_ar1_w7,AnomAR1,variant,1084.0,1355.0,1682.0
+gam_w7,GAM,variant,1090.0,1378.0,1711.0
+lgbm_anomaly,LightGBM,variant,1101.0,1364.0,1699.0
+lgbm_noclim,LightGBM,variant,1059.0,1301.0,1778.0
+clim5,AnomAR1,simple,1812.0,1845.0,1916.0
+persistence,AnomAR1,simple,1312.0,2068.0,3456.0

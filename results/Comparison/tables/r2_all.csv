@@ -1,0 +1,11 @@
+model,source,role,1,2,4
+anom_ar1,AnomAR1,baseline,0.8677,0.7945,0.7041
+gam,GAM,main,0.8662,0.7956,0.7038
+lgbm_raw,LightGBM,main,0.8768,0.8209,0.7037
+chronos2,Chronos-2,main,0.8612,0.7834,0.6675
+anom_ar1_w7,AnomAR1,variant,0.8691,0.8006,0.7058
+gam_w7,GAM,variant,0.8675,0.7937,0.6957
+lgbm_anomaly,LightGBM,variant,0.865,0.7978,0.6999
+lgbm_noclim,LightGBM,variant,0.875,0.8161,0.6715
+clim5,AnomAR1,simple,0.634,0.6301,0.6183
+persistence,AnomAR1,simple,0.808,0.5356,-0.2414

@@ -1,0 +1,67 @@
+# Comparison – đặt 4 mô hình cạnh nhau
+
+> **Bắt đầu từ [`notebooks/Comparison/comparison_overview.ipynb`](../../notebooks/Comparison/comparison_overview.ipynb)**.
+> Bản tiếng Anh: [`comparison_overview_en.ipynb`](../../notebooks/Comparison/comparison_overview_en.ipynb).
+
+## 1. Làm gì
+
+Không học lại mô hình nào. Đọc `predictions.csv` của 4 thư mục kết quả, kiểm tra mọi thư mục dùng chung một mốc
+AnomAR1, rồi tính lại các bảng chung bằng cùng công thức với bảng của từng mô hình. Số ở đây khớp với số trong
+`results/<Mô hình>/tables/` (có test kiểm tra).
+
+Bản chính của mỗi thành viên, khai báo trước: `gam`, `lgbm_raw`, `chronos2`; mốc là `anom_ar1`.
+
+## 2. Luồng dữ liệu
+
+```
+results/{AnomAR1,GAM,LightGBM,Chronos-2}/tables/predictions.csv
+        │
+   comparison_tables.py    (bước 1) kiểm tra mốc chung, rồi ghi bảng → results/Comparison/tables/
+   comparison_figures.py   (bước 2) 4 hình → results/Comparison/figures/
+```
+
+| Bảng | Nội dung |
+|---|---|
+| `baseline_check.csv` | cột `anom_ar1` của mỗi thư mục lệch bao nhiêu so với thư mục AnomAR1 |
+| `r2_all.csv` | R² gộp = 1 − SSE/SST của mọi mô hình × tầm (SST chung cho mọi mô hình ở cùng tầm) |
+| `rmse_all.csv` | RMSE gộp của mọi mô hình × tầm, kèm thư mục nguồn và vai trò (`baseline`, `main`, `variant`, `simple`) |
+| `vs_anom_ar1_all.csv` | kiểm định cấp mùa so với AnomAR1; `p_t_holm_main` = Holm trên 9 phép so của 3 bản chính × 3 tầm |
+| `vs_anom_ar1_main.csv` | chỉ họ chính (9 dòng), **không làm tròn**: `p_t_holm_model` (Holm trong thư mục mô hình) và `p_t_holm_main` (Holm trên 9 phép so). Báo cáo và video trích số từ bảng này |
+| `rmse_by_phase.csv` | RMSE theo giai đoạn lũ, 4 bản chính × 3 tầm (cùng dạng với bảng của từng mô hình) |
+| `rmse_by_size.csv` | RMSE theo cỡ lũ của mùa test, 4 bản chính × 3 tầm |
+| `season_rmse.csv` | RMSE từng mùa test và tỉ lệ so với AnomAR1 cùng mùa |
+| `residual_tests_all.csv` | (`comparison_residuals.py`) phần dư từng (mô hình, tầm, mùa test) của `anom_ar1`, `gam`, `lgbm_raw`, `chronos2`: n, bias, ACF trễ 1–5, p Ljung–Box trễ 10 |
+| `residual_summary_all.csv` | (`comparison_residuals.py`) phần dư gộp theo (mô hình, tầm): bias, SD, xiên, nhọn dư, Shapiro–Wilk (chỉ tham khảo vì sai số tự tương quan), ACF1–3 trung bình, số và tỉ lệ mùa có Ljung–Box p < 0,05; hình `residual_diagnostics_all.png` |
+| `robustness_main.csv` | (`comparison_robustness.py`, phân tích độ vững, không thay kết quả chính) 9 phép so họ chính: CI 90% của trung bình d = ½·ln(MSE_m/MSE_b) theo t và theo bootstrap theo mùa (B = 10000, seed 0), CI 95% bootstrap và p bootstrap của chênh MSE, min/max p_tost, p_t, p Holm họ chính khi bỏ từng mùa, mùa ngoại lai |
+| `robustness_season_values.csv` | (`comparison_robustness.py`) 99 dòng: MSE từng mùa, d, chênh MSE, z, cờ ngoài 1,5·IQR, p khi bỏ mùa đó |
+| `paired_diff_normality.csv` | (`comparison_residuals.py`) Shapiro–Wilk trên 11 giá trị theo mùa mà kiểm định so sánh dùng: MSE_m − MSE_b (t ghép cặp), (MSE_m − MSE_b)/MSE_b (CI), ½·ln(MSE_m/MSE_b) (TOST) |
+
+Hình: `rmse_by_horizon.png`, `season_ratio.png`, `conditions.png`, `example_seasons.png`.
+
+## 3. Chạy lại
+
+```powershell
+.venv\Scripts\python.exe src/Comparison/comparison_tables.py
+.venv\Scripts\python.exe src/Comparison/comparison_figures.py
+.venv\Scripts\python.exe -m pytest tests/Comparison
+```
+
+## 4. Kết quả (11 mùa test 2010–2020)
+
+| Mô hình | RMSE 8 ngày | 16 ngày | 32 ngày | Tỉ lệ so với AnomAR1 (8 / 16 / 32) | p Holm (9 phép so) |
+|---|--:|--:|--:|--:|--:|
+| AnomAR1 | 1090 | 1375 | 1687 | – | – |
+| GAM | 1096 | 1372 | 1688 | 1,006 / 0,997 / 1,001 | 1 / 1 / 1 |
+| LightGBM thô | 1051 | 1284 | 1688 | 0,965 / 0,933 / 1,001 | 1 / 1 / 1 |
+| Chronos-2 | 1116 | 1412 | 1788 | 1,024 / 1,027 / 1,060 | 1 / 1 / **0,045** |
+
+Không mô hình nào tốt hơn AnomAR1 có ý nghĩa. Chronos-2 zero-shot kém hơn có ý nghĩa ở 32 ngày.
+GAM tương đương AnomAR1 ở 8 ngày trong biên ±5% RMSE (p TOST = 0,002).
+
+## 5. Ghi chú
+
+- Holm của từng thư mục mô hình chỉ hiệu chỉnh trong các phép so của mô hình đó; bảng ở đây hiệu chỉnh trên cả 9.
+  Biến thể và mốc đơn giản có p thô, không vào họ hiệu chỉnh.
+- Bảng theo giai đoạn và cỡ lũ chỉ để mô tả, không kiểm định.
+- Muốn thêm mô hình: ghi `predictions.csv` đúng 7 cột chuẩn vào `results/<Mô hình>/tables/` (có cả cột `anom_ar1`),
+  rồi thêm thư mục đó vào `SOURCES` trong `comparison_tables.py`.

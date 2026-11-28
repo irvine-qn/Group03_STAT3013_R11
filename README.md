@@ -1,119 +1,118 @@
-# Fair Comparison of Statistical and Machine Learning Models for Flood Extent Forecasting in Vietnam
+# Group 03
 
-Đồ án môn **STAT3013 – Phân tích thống kê** (lớp R11, Nhóm 03), Trường Đại học Công nghệ Thông tin (UIT).
+Flood-extent forecasting for the Vietnamese Mekong Delta: four models compared
+against the AnomAR1 baseline on the same protocol (11 test seasons 2010–2020,
+yearly rolling origin, horizons of 8, 16 and 32 days).
 
-> **Trạng thái:** đang thực hiện. Báo cáo dự kiến ngày 2026-11-23.
+The project is intended to run locally on Windows.
 
-## Câu hỏi nghiên cứu
+## Local setup
 
-> Mô hình thống kê có thể cạnh tranh với Machine Learning trong những điều kiện nào? Mô hình nào phù hợp hơn với dữ liệu lũ của từng khu vực?
+Use Python 3.12.10 or later in PowerShell:
 
-Thay vì kết luận "mô hình X tốt nhất", nhóm so sánh các mô hình dưới **cùng một giao thức** và báo cáo kết quả **theo điều kiện**:
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+```
 
-| Điều kiện | Câu hỏi |
+## Models
+
+Each model is self-contained: its code is in `src/<Model>/`, its tests in
+`tests/<Model>/`, its outputs in `results/<Model>/` and its overview notebook in
+`notebooks/<Model>/`. Start from the notebook; the `README.md` in each `src/`
+folder lists the scripts in the order to run them.
+
+| Model | Family | Source | Overview notebook |
+|---|---|---|---|
+| AnomAR1 | statistical baseline | [`src/AnomAR1/`](src/AnomAR1/) | [`notebooks/AnomAR1/`](notebooks/AnomAR1/) |
+| GAM | statistical | [`src/GAM/`](src/GAM/) | [`notebooks/GAM/`](notebooks/GAM/) |
+| LightGBM | machine learning | [`src/LightGBM/`](src/LightGBM/) | [`notebooks/LightGBM/`](notebooks/LightGBM/) |
+| Chronos-2 | foundation model, zero-shot | [`src/Chronos-2/`](src/Chronos-2/) | [`notebooks/Chronos-2/`](notebooks/Chronos-2/) |
+
+### Shared result tables
+
+Every model writes the same five tables to `results/<Model>/tables/`, so they
+can be combined:
+
+| File | Columns |
 |---|---|
-| Tầm dự báo | Lợi thế của ML (nếu có) xuất hiện ở 8, 16 hay 32 ngày? |
-| Giai đoạn lũ | Nước lên, đỉnh lũ hay nước rút? |
-| Cường độ lũ | Năm lũ lớn/nhỏ bất thường, mô hình nào "gãy" trước? |
-| Lượng dữ liệu huấn luyện | Cần bao nhiêu mùa lũ để ML bắt kịp thống kê? |
-| Vùng và quy mô không gian | Kết luận có lặp lại giữa các vùng và giữa các cấp độ không? |
+| `predictions.csv` | `season, t, doy_target, y_target, model, h, pred` (one row per forecast) |
+| `rmse.csv` | `model, 1, 2, 4` (pooled RMSE in km² for horizons h = 1, 2, 4 steps = 8, 16, 32 days) |
+| `vs_anom_ar1.csv` | `model, h, n_seasons, rmse_ratio, wins, mse_diff_pct, mse_diff_pct_ci_low, mse_diff_pct_ci_high, p_t, p_wilcoxon, p_tost, p_t_holm` (season-level tests against AnomAR1, n = 11) |
+| `rmse_by_phase.csv` | `h, model, rising, peak, falling` (pooled RMSE by flood phase of the target day: before day 257, days 257–297, from day 298) |
+| `rmse_by_size.csv` | `h, model, small, medium, large` (pooled RMSE by flood size: the 11 test seasons split into terciles of their peak) |
 
-## Dữ liệu
+Other tables in each folder are specific to that model.
 
-- **Vùng chính (Đồng bằng sông Cửu Long):** Vu et al. (2022), *Data in Brief* 42:108268. 565 bản đồ lũ MODIS (8 ngày/ảnh, mùa lũ 2000–2020) và 21 bản đồ sử dụng đất. Dữ liệu: [Mendeley Data, DOI 10.17632/kpftzmsyyz.2](https://data.mendeley.com/datasets/kpftzmsyyz/2).
-- **Các vùng bổ sung của Việt Nam:** dự kiến mở rộng để tăng độ tin cậy của kết luận. Nguồn dữ liệu đang được chốt.
-- Ảnh vệ tinh được **tổng hợp thành chuỗi số** (diện tích ngập, km²) rồi mới mô hình hóa. Mô hình không nhận ảnh làm đầu vào.
-- Dữ liệu thô không nằm trong repo. Xem [data/raw/README.md](data/raw/README.md).
+The cross-model table that the report and the video quote is
+`results/Comparison/tables/vs_anom_ar1_main.csv`: the 9 main comparisons, unrounded, with the columns of
+`vs_anom_ar1.csv` except that `p_t_holm` becomes `p_t_holm_model` (Holm within that model's folder) and
+`p_t_holm_main` (Holm over the main family) is added.
 
-## Phương pháp
+### Multiple comparisons
 
-- **Biến mục tiêu:** diện tích ngập (km²) sau 8, 16 và 32 ngày.
-- **Chia dữ liệu:** rolling-origin theo năm (huấn luyện các năm trước, kiểm tra năm kế tiếp), không xáo trộn, mọi thống kê tiền xử lý chỉ tính từ tập huấn luyện.
-- **Baseline:** persistence, climatology, climatology 5 năm, seasonal naive.
-- **Thống kê:** AR trên anomaly, ARX/SARIMAX, ETS, hồi quy điều hòa + sai số ARMA, Ridge.
-- **Machine Learning:** Random Forest, Gradient Boosting, SVR, MLP (LSTM/GRU là thử nghiệm phụ).
-- **Kiểm định:** Diebold–Mariano (hiệu chỉnh HLN) và block bootstrap theo mùa, kiểm định tương đương (TOST), hiệu chỉnh đa kiểm định (Holm).
+The **main family** is fixed in advance, not chosen from the results: each member's main model (`gam`,
+`lgbm_raw`, `chronos2`) against `anom_ar1` at h = 1, 2, 4, i.e. 9 comparisons. Holm is applied to their 9
+season-level paired t-test p-values (n = 11), recomputed from `predictions.csv` so nothing is rounded before
+the adjustment. This is `p_t_holm_main`.
 
-## Cấu trúc thư mục (mục tiêu)
+Variants (`anom_ar1_w7`, `gam_w7`, `lgbm_anomaly`, `lgbm_noclim`) and the simple baselines (`clim5`,
+`persistence`) are secondary analyses. They are not in the main family and keep the Holm adjustment within
+their own model folder (`p_t_holm` in `results/<Model>/tables/vs_anom_ar1.csv`).
 
-Mục đánh dấu ✅ đã có, 🔜 sẽ được thêm theo [lộ trình](#lộ-trình).
+### Comparison across models
 
+[`src/Comparison/`](src/Comparison/) reads the four `predictions.csv` files, checks that every folder uses the
+same AnomAR1 forecasts, and writes the combined tables and figures to `results/Comparison/`. Its season-level
+tests apply Holm over all 9 main comparisons (3 models × 3 horizons). Start from
+[`notebooks/Comparison/`](notebooks/Comparison/).
+
+```powershell
+python src/Comparison/comparison_tables.py
+python src/Comparison/comparison_figures.py
 ```
-.
-├── README.md                     ✅
-├── AGENTS.md                     ✅  hướng dẫn cho AI coding agent
-├── requirements.txt              ✅
-├── data/
-│   ├── raw/<region>/             ✅  ảnh gốc theo vùng, không commit
-│   ├── interim/<region>/         🔜  chuỗi/bảng trung gian (CSV nhỏ)
-│   └── processed/<region>/       🔜  bảng Level 1 / 2 / 3 đã sẵn sàng mô hình hóa
+
+Result over 11 test seasons: no model beats AnomAR1 significantly; zero-shot Chronos-2 is significantly worse at
+32 days (Holm p = 0.045); GAM is equivalent to AnomAR1 at 8 days within ±5% RMSE.
+
+## Interactive report
+
+Reads the shared tables of all four models:
+
+```powershell
+streamlit run app/streamlit_app.py
+```
+
+## Tests
+
+Run from the project root:
+
+```powershell
+python -m pytest
+```
+
+## Project layout
+
+```text
+Group03_STAT3013_R11/
+├── app/
+│   └── streamlit_app.py      # Local Streamlit report UI
 ├── configs/
-│   └── regions/<region>.yaml     🔜  mỗi vùng một file: mặt nạ, lưới, lịch ảnh, đường dẫn
-├── src/floodbench/               ✅  gói code tái sử dụng
-│   ├── data/                     🔜  build_series, build_zones, build_grid, schema, regions
-│   ├── models/                   🔜  baselines, stat, ml, hybrid
-│   ├── cv.py                     🔜  rolling-origin theo năm
-│   ├── features.py               🔜  lag, anomaly, climatology (chỉ từ tập train)
-│   ├── evaluation.py             🔜  RMSE, MAE, MASE, PI, sai số đỉnh
-│   └── inference.py              🔜  DM-HLN, bootstrap theo mùa, TOST, MixedLM, Holm
-├── tests/                        ✅  pytest (kiểm tra rò rỉ, kiểm định có đáp án biết trước)
-├── notebooks/                    ✅  01 audit → 02 EDA → 03 thống kê → 04 ML → 05 benchmark
-│                                     → 06 đa vùng → 07 lưới (tùy chọn)
-├── results/{tables,figures}/     ✅  đầu ra do code sinh ra
-├── reports/                      ✅  full_report, ieee_paper, slides, references
-└── docs/                         ✅  decisions.md, tuning_log.md
+│   └── regions/
+│       └── mekong.yaml       # Per-region settings (paths relative to project root)
+├── data/
+│   ├── raw/                  # Source datasets (not committed)
+│   └── processed/            # Derived datasets (level1_series.csv is the shared input)
+├── docs/                     # Project documentation
+├── notebooks/                # Overview notebook of each model and of the comparison (Vietnamese and English)
+├── results/                  # Outputs, one folder per model plus Comparison/
+├── src/                      # Source code, one folder per model plus Comparison/
+├── tests/                    # Tests, one folder per model plus Comparison/
+├── pyproject.toml            # Project metadata and pytest settings
+├── requirements.txt          # Pinned runtime dependencies
+└── README.md
 ```
 
-Quy ước chung: logic nằm trong `src/`, notebook chỉ gọi hàm và vẽ hình. Báo cáo chỉ trích số từ `results/`.
-
-## Cài đặt
-
-```bash
-python -m venv venv
-# Windows PowerShell
-.\venv\Scripts\Activate.ps1
-# macOS / Linux
-source venv/bin/activate
-
-pip install -r requirements.txt
-```
-
-Đã kiểm tra với Python 3.10.11. Sau khi có code, cài gói ở chế độ phát triển bằng `pip install -e .` và chạy kiểm thử bằng `pytest`.
-
-## Lộ trình
-
-| Giai đoạn | Nội dung | Mốc |
-|---|---|---|
-| 0 | Chốt phạm vi và cấu trúc repo | 2026-10-23 |
-| 1 | Pipeline dữ liệu ĐBSCL (cắt mặt nạ, chuẩn hóa lưới) | 2026-10-24 |
-| 2 | EDA, thống kê mô tả và suy diễn | 2026-10-28 |
-| 3 | Baseline và mô hình thống kê | 2026-11-01 |
-| 4 | Mô hình ML và benchmark | 2026-11-08 |
-| 5 | Kiểm định và phân tích theo điều kiện | 2026-11-13 |
-| 6 | Mở rộng sang các vùng khác của Việt Nam | đang chốt dữ liệu |
-| 7 | Báo cáo, bài IEEE, slide | 2026-11-22 |
-
-## Giới hạn đã biết
-
-- Bản đồ lũ MODIS là sản phẩm suy diễn từ chỉ số EVI/LSWI, không phải quan sát trực tiếp. Lớp "nước" gồm cả sông, ao nuôi và ruộng ngập nước canh tác.
-- Chỉ có 21 mùa lũ mỗi vùng, nên kiểm định có sức mạnh thấp. Nhóm báo cáo khoảng tin cậy thay vì chỉ p-value.
-- Dữ liệu không có mưa, mực nước hay địa hình. Mô hình ở giai đoạn đầu là đơn biến.
-
-## Thành viên
-
-Nhóm 03, lớp R11. Giảng viên hướng dẫn: thầy Triều.
-
-| Họ tên | MSSV | Vai trò chính |
-|---|---|---|
-| | | Dữ liệu và pipeline |
-| | | Mô hình thống kê |
-| | | Machine Learning |
-| | | Đánh giá và viết báo cáo |
-
-## Tài liệu tham khảo chính
-
-- Vu, D. T. et al. (2022). Datasets of land use change and flood dynamics in the Vietnamese Mekong Delta. *Data in Brief*, 42, 108268.
-- Makridakis, S., Spiliotis, E., Assimakopoulos, V. (2018). Statistical and Machine Learning forecasting methods: Concerns and ways forward. *PLOS ONE*, 13(3), e0194889.
-- Hyndman, R. J., Athanasopoulos, G. (2021). *Forecasting: Principles and Practice*, 3rd ed.
-
-Danh mục đầy đủ nằm trong [reports/references/](reports/references/).
+Note: Git does not track empty folders. Add a `.gitkeep` file to any empty
+folder above that should exist in the repository.
